@@ -1,17 +1,20 @@
 services:
   api:
+    stdin_open: true
+    tty: true
     build: .
     ports:
       - "3000:3000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     env_file:
       - .env
     networks:
       - ccp
     develop:
       watch:
-        - action: rebuild
+        - action: sync+restart
           path: ./src
           target: /app/src
           ignore:
