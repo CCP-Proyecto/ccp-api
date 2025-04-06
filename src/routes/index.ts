@@ -1,1 +1,1 @@
-export { manufacturer } from "./manufacturer";
+export { manufacturer } from "./manufacturer/";

@@ -41,12 +41,22 @@ manufacturerRouter.post("/", async (c) => {
     });
   }
 
+  const manufacturerExists = await db.query.manufacturer.findFirst({
+    where: eq(manufacturer.id, parsedManufacturer.id),
+  });
+
+  if (manufacturerExists) {
+    throw new HTTPException(400, {
+      message: "Manufacturer already exists",
+    });
+  }
+
   const createdManufacturer = await db
     .insert(manufacturer)
     .values(parsedManufacturer)
     .returning();
 
-  return c.json(createdManufacturer);
+  return c.json(createdManufacturer[0]);
 });
 
 manufacturerRouter.put("/:id", async (c) => {
@@ -67,21 +77,21 @@ manufacturerRouter.put("/:id", async (c) => {
     .where(eq(manufacturer.id, c.req.param("id")))
     .returning();
 
-  if (!updatedManufacturer) {
+  if (!updatedManufacturer || updatedManufacturer.length === 0) {
     throw new HTTPException(404, {
       message: "Manufacturer not found",
     });
   }
 
-  return c.json(updatedManufacturer);
+  return c.json(updatedManufacturer[0]);
 });
 
 manufacturerRouter.delete("/:id", async (c) => {
   const deletedManufacturer = await db
     .delete(manufacturer)
-    .where(eq(manufacturer.id, c.req.param("id")));
+    .where(eq(manufacturer.id, c.req.param("id"))).returning();
 
-  if (!deletedManufacturer) {
+  if (!deletedManufacturer || deletedManufacturer.length === 0) {
     throw new HTTPException(404, {
       message: "Manufacturer not found",
     });
