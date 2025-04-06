@@ -5,6 +5,7 @@ import { logger } from "hono/logger";
 
 import { verifySession } from "@/middlewares";
 import { manufacturer, product } from "@/routes";
+import { HTTPException } from "hono/http-exception";
 
 const app = new Hono();
 
@@ -25,6 +26,20 @@ app.use(logger());
 app.use("/api/*", verifySession);
 
 app.route("/api/manufacturer", manufacturer);
+
+app.onError((error, c) => {
+  if (!(error instanceof HTTPException)) {
+    return c.json({ message: "Internal server error" }, 500);
+  }
+
+  return c.json(
+    {
+      message: error.message,
+      status: error.status,
+    },
+    error.status,
+  );
+});
 
 export default {
   port: env.PORT ?? 3000,

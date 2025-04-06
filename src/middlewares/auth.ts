@@ -1,11 +1,15 @@
-import { auth } from "@/lib/auth";
 import { createMiddleware } from "hono/factory";
+import { HTTPException } from "hono/http-exception";
+
+import { auth } from "@/lib/auth";
 
 export const verifySession = createMiddleware(async (c, next) => {
   const session = await auth.api.getSession({ headers: c.req.raw.headers });
 
   if (!session) {
-    return c.json({ error: "Invalid or missing session" }, 401);
+    throw new HTTPException(401, {
+      message: "Invalid or missing session",
+    });
   }
 
   next();
