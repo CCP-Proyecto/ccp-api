@@ -26,15 +26,22 @@ app.use(logger());
 app.use("/api/*", verifySession);
 
 app.route("/api/manufacturer", manufacturer);
+app.route("/api/product", product);
 
 app.onError((error, c) => {
   if (!(error instanceof HTTPException)) {
     return c.json({ message: "Internal server error" }, 500);
   }
 
+  let message = error.message;
+
+  if (error.cause) {
+    message += `-${error.cause}`;
+  }
+
   return c.json(
     {
-      message: error.message,
+      message,
       status: error.status,
     },
     error.status,
