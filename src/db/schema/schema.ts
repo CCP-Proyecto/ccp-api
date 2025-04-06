@@ -11,3 +11,16 @@ export const manufacturer = pgTable("manufacturer", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const product = pgTable("product", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  price: text("price").notNull(),
+  amount: text("quantity").notNull(),
+  storageCondition: text("storage_condition"),
+  manufacturerId: text("manufacturer_id")
+    .notNull()
+    .references(() => manufacturer.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
