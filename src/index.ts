@@ -1,9 +1,10 @@
 import { env } from "bun";
 import { Hono } from "hono";
-
-import { auth } from "@/lib/auth";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+
+import { verifySession } from "@/middlewares";
+import { manufacturer, product } from "@/routes";
 
 const app = new Hono();
 
@@ -21,19 +22,9 @@ app.use(
 
 app.use(logger());
 
-app.use("/api/*", async (c, next) => {
-  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+app.use("/api/*", verifySession);
 
-  if (!session) {
-    return c.json({ error: "Invalid or missing session" }, 401);
-  }
-
-  next();
-});
-
-app.get("/api/product", async (c) => {
-  return c.json({ name: "Cheetos", price: 100 });
-});
+app.route("/api/manufacturer", manufacturer);
 
 export default {
   port: env.PORT ?? 3000,
