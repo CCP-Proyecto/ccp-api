@@ -1,9 +1,11 @@
 import { env } from "bun";
 import { Hono } from "hono";
-
-import { auth } from "@/lib/auth";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
+
+import { verifySession } from "@/middlewares";
+import { manufacturer, product } from "@/routes";
+import { HTTPException } from "hono/http-exception";
 
 const app = new Hono();
 
@@ -21,18 +23,29 @@ app.use(
 
 app.use(logger());
 
-app.use("/api/*", async (c, next) => {
-  const session = await auth.api.getSession({ headers: c.req.raw.headers });
+app.use("/api/*", verifySession);
 
-  if (!session) {
-    return c.json({ error: "Invalid or missing session" }, 401);
+app.route("/api/manufacturer", manufacturer);
+app.route("/api/product", product);
+
+app.onError((error, c) => {
+  if (!(error instanceof HTTPException)) {
+    return c.json({ message: "Internal server error" }, 500);
   }
 
-  next();
-});
+  let message = error.message;
 
-app.get("/api/product", async (c) => {
-  return c.json({ name: "Cheetos", price: 100 });
+  if (error.cause) {
+    message += `-${error.cause}`;
+  }
+
+  return c.json(
+    {
+      message,
+      status: error.status,
+    },
+    error.status,
+  );
 });
 
 export default {
