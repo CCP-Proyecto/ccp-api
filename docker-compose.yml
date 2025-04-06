@@ -30,6 +30,11 @@ services:
       - "5432:5432"
     networks:
       - ccp
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres"]
+      interval: 1s
+      timeout: 5s
+      retries: 25
 
 networks:
   ccp:
