@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 import {
   customType,
   integer,
+  json,
   pgTable,
   serial,
   text,
@@ -49,6 +50,21 @@ export const product = pgTable("product", {
   manufacturerId: text("manufacturer_id")
     .notNull()
     .references(() => manufacturer.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const order = pgTable("order", {
+  id: serial("id").primaryKey(),
+  products: json("products")
+    .$type<
+      Array<{
+        id: number;
+        name: string;
+        amount: number;
+      }>
+    >()
+    .notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
