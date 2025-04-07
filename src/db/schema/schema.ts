@@ -1,4 +1,29 @@
-import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+import {
+  customType,
+  integer,
+  pgTable,
+  serial,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
+
+const numericAsNumber = customType<{ data: number }>({
+  dataType: (config) => {
+    //@ts-ignore
+    if (config?.precision && config?.scale) {
+      //@ts-ignore
+      return `numeric(${config.precision}, ${config.scale})`;
+    }
+    return "numeric";
+  },
+  toDriver(value: number): string {
+    return String(value);
+  },
+  fromDriver(value): number {
+    return Number(value);
+  },
+});
 
 export const manufacturer = pgTable("manufacturer", {
   id: text("id").primaryKey().notNull(),
@@ -12,15 +37,29 @@ export const manufacturer = pgTable("manufacturer", {
 });
 
 export const product = pgTable("product", {
-  id: text("id").primaryKey(),
+  id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  description: text("description"),
-  price: text("price").notNull(),
-  amount: text("quantity").notNull(),
-  storageCondition: text("storage_condition"),
+  description: text("description").notNull(),
+  price: numericAsNumber("price", {
+    precision: 10,
+    scale: 2,
+  }),
+  amount: integer("amount").notNull(),
+  storageCondition: text("storage_condition").notNull(),
   manufacturerId: text("manufacturer_id")
     .notNull()
     .references(() => manufacturer.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+export const manufacturerRelations = relations(manufacturer, ({ many }) => ({
+  products: many(product),
+}));
+
+export const productRelations = relations(product, ({ one }) => ({
+  manufacturer: one(manufacturer, {
+    fields: [product.manufacturerId],
+    references: [manufacturer.id],
+  }),
+}));
