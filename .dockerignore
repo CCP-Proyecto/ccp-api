@@ -6,3 +6,4 @@
 !drizzle.config.ts
 !dist/*
 !entrypoint.sh
+!drizzle/*
