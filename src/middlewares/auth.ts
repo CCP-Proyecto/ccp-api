@@ -12,5 +12,5 @@ export const verifySession = createMiddleware(async (c, next) => {
     });
   }
 
-  next();
+  return next();
 });
