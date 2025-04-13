@@ -1,7 +1,7 @@
 import { pgTable, serial, text, integer, timestamp } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { numericAsNumber } from "../types/custom-types";
-import { manufacturer } from "./manufacturer.schema";
+import { manufacturer } from "./manufacturer-schema";
 
 export const product = pgTable("product", {
   id: serial("id").primaryKey(),

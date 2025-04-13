@@ -1,7 +1,7 @@
 import { pgTable, serial, text, timestamp, integer } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { customer } from "./customer.schema";
-import { salesperson } from "./salesperson.schema";
+import { customer } from "./customer-schema";
+import { salesperson } from "./salesperson-schema";
 
 export const visit = pgTable("visit", {
   id: serial("id").primaryKey(),

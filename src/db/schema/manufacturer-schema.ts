@@ -1,6 +1,6 @@
 import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { product } from "./product.schema";
+import { product } from "./product-schema";
 
 export const manufacturer = pgTable("manufacturer", {
   id: text("id").primaryKey().notNull(),
