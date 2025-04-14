@@ -4,7 +4,8 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 
 import { db } from "@/db";
-import { order, product as productModel } from "@/db/schema/schema";
+import { order} from "@/db/schema/order-schema";
+import { product as productModel } from "@/db/schema/product-schema";
 import { createOrderSchema } from "./schema";
 
 const orderRouter = new Hono();

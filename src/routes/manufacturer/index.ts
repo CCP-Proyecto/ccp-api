@@ -4,7 +4,7 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 
 import { db } from "@/db";
-import { manufacturer } from "@/db/schema/schema";
+import { manufacturer } from "@/db/schema/manufacturer-schema";
 import { createManufacturerSchema, updateManufacturerSchema } from "./schema";
 
 const manufacturerRouter = new Hono();
