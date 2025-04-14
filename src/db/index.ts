@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/node-postgres";
-import * as authSchema from "./schema/auth-schema";
-import * as dataSchema from "./schema/schema";
+import * as authSchema from "./schema/auth-schema"; // optional if needed separately
+import * as dataSchema from "./schema"; // ✅ pulls everything from index.ts
 
 import { env } from "@/lib/env";
 
