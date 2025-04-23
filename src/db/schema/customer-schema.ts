@@ -1,4 +1,4 @@
-import { pgTable, serial, text, integer } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, integer, timestamp } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { visit } from "./visit-schema";
 import { salesperson } from "./salesperson-schema";
@@ -9,9 +9,11 @@ export const customer = pgTable("customer", {
   name: text("name").notNull(),
   address: text("address").notNull(),
   phone: text("phone").notNull(),
-  createdAt: text("created_at").notNull(),
-  updatedAt: text("updated_at").notNull(),
-  salespersonId: integer("salesperson_id").notNull().references(() => salesperson.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  salespersonId: integer("salesperson_id")
+    .notNull()
+    .references(() => salesperson.id, { onDelete: "set null" }), // or "cascade" if preferred
 });
 
 export const customerRelations = relations(customer, ({ one, many }) => ({
