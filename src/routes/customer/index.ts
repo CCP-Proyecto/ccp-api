@@ -10,20 +10,17 @@ import { createCustomerSchema, updateCustomerSchema } from "./schema";
 
 const customerRouter = new Hono();
 
-// Helper function to check if a customer exists
 const customerExists = async (id: string) => {
   return await db.query.customer.findFirst({
     where: eq(customer.id, id),
   });
 };
 
-// Get all customers
 customerRouter.get("/", async (c) => {
   const customers = await db.select().from(customer);
   return c.json(customers);
 });
 
-// Get a specific customer by ID
 customerRouter.get("/:id", async (c) => {
   const selectedCustomer = await db.query.customer.findFirst({
     where: eq(customer.id, c.req.param("id")),
@@ -38,7 +35,6 @@ customerRouter.get("/:id", async (c) => {
   return c.json(selectedCustomer);
 });
 
-// Create a new customer
 customerRouter.post("/", async (c) => {
   const body = await c.req.json();
   const parsed = createCustomerSchema(body);
@@ -49,8 +45,7 @@ customerRouter.post("/", async (c) => {
       cause: parsed.summary,
     });
   }
-
-  // Check if the customer already exists
+  
   const exists = await db.query.customer.findFirst({
     where: eq(customer.id, parsed.id),
   });
@@ -61,7 +56,6 @@ customerRouter.post("/", async (c) => {
     });
   }
 
-  // Validate salespersonId if it's provided
   const {salespersonId} = parsed;
 
   if (salespersonId) {
@@ -77,13 +71,10 @@ customerRouter.post("/", async (c) => {
     }
   }
 
-  // Create the customer if validation passes
   const created = await db.insert(customer).values(parsed).returning();
   return c.json(created[0]);
 });
 
-
-// Update an existing customer by ID
 customerRouter.put("/:id", async (c) => {
   const body = await c.req.json();
   const parsed = updateCustomerSchema(body);
@@ -95,7 +86,6 @@ customerRouter.put("/:id", async (c) => {
     });
   }
 
-  // Explicitly prevent salespersonId from being updated here
   const { salespersonId, ...updateData } = parsed;
 
   const updated = await db
@@ -113,7 +103,6 @@ customerRouter.put("/:id", async (c) => {
   return c.json(updated[0]);
 });
 
-// Assign a salesperson to a customer
 customerRouter.patch("/:id/salesperson", async (c) => {
   const { salespersonId } = await c.req.json();
 
@@ -154,8 +143,6 @@ customerRouter.patch("/:id/salesperson", async (c) => {
   return c.json(updated[0]);
 });
 
-
-// Delete a customer by ID
 customerRouter.delete("/:id", async (c) => {
   const deleted = await db
     .delete(customer)
