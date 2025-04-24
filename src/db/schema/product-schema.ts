@@ -1,5 +1,5 @@
-import { pgTable, serial, text, integer, timestamp } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 import { numericAsNumber } from "../types/custom-types";
 import { manufacturer } from "./manufacturer-schema";
 

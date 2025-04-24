@@ -50,7 +50,7 @@ customerRouter.post("/", async (c) => {
     });
   }
 
-  const {salespersonId} = parsed;
+  const { salespersonId } = parsed;
 
   if (salespersonId) {
     const salespersonExists = await db.query.salesperson.findFirst({

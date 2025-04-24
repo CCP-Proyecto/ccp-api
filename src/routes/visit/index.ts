@@ -16,7 +16,7 @@ visitRouter.get("/", async (c) => {
 
 visitRouter.get("/:id", async (c) => {
   const selectedVisit = await db.query.visit.findFirst({
-    where: eq(visit.id, parseInt(c.req.param("id"))),
+    where: eq(visit.id, Number.parseInt(c.req.param("id"))),
   });
 
   if (!selectedVisit) {
@@ -57,7 +57,7 @@ visitRouter.put("/:id", async (c) => {
   const updatedVisit = await db
     .update(visit)
     .set(parsedVisit)
-    .where(eq(visit.id, parseInt(c.req.param("id"))))
+    .where(eq(visit.id, Number.parseInt(c.req.param("id"))))
     .returning();
 
   if (!updatedVisit || updatedVisit.length === 0) {
@@ -72,7 +72,7 @@ visitRouter.put("/:id", async (c) => {
 visitRouter.delete("/:id", async (c) => {
   const deletedVisit = await db
     .delete(visit)
-    .where(eq(visit.id, parseInt(c.req.param("id"))))
+    .where(eq(visit.id, Number.parseInt(c.req.param("id"))))
     .returning();
 
   if (!deletedVisit || deletedVisit.length === 0) {

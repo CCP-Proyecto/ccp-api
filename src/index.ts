@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { logger } from "hono/logger";
 
 import { verifySession } from "@/middlewares";
-import { manufacturer, order, product, customer, salesperson } from "@/routes";
+import { customer, manufacturer, order, product, salesperson } from "@/routes";
 import { HTTPException } from "hono/http-exception";
 
 const app = new Hono();

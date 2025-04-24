@@ -80,7 +80,10 @@ salespersonRouter.put("/:id", async (c) => {
 });
 
 salespersonRouter.delete("/:id", async (c) => {
-  const deleted = await db.delete(salesperson).where(eq(salesperson.id, c.req.param("id"))).returning();
+  const deleted = await db
+    .delete(salesperson)
+    .where(eq(salesperson.id, c.req.param("id")))
+    .returning();
 
   if (!deleted || deleted.length === 0) {
     throw new HTTPException(404, {

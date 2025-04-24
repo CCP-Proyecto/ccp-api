@@ -89,7 +89,8 @@ manufacturerRouter.put("/:id", async (c) => {
 manufacturerRouter.delete("/:id", async (c) => {
   const deletedManufacturer = await db
     .delete(manufacturer)
-    .where(eq(manufacturer.id, c.req.param("id"))).returning();
+    .where(eq(manufacturer.id, c.req.param("id")))
+    .returning();
 
   if (!deletedManufacturer || deletedManufacturer.length === 0) {
     throw new HTTPException(404, {

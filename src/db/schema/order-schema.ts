@@ -1,4 +1,4 @@
-import { pgTable, serial, timestamp, json } from "drizzle-orm/pg-core";
+import { json, pgTable, serial, timestamp } from "drizzle-orm/pg-core";
 
 export const order = pgTable("order", {
   id: serial("id").primaryKey(),
