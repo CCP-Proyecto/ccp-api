@@ -10,12 +10,6 @@ import { createCustomerSchema, updateCustomerSchema } from "./schema";
 
 const customerRouter = new Hono();
 
-const customerExists = async (id: string) => {
-  return await db.query.customer.findFirst({
-    where: eq(customer.id, id),
-  });
-};
-
 customerRouter.get("/", async (c) => {
   const customers = await db.select().from(customer);
   return c.json(customers);
@@ -45,7 +39,7 @@ customerRouter.post("/", async (c) => {
       cause: parsed.summary,
     });
   }
-  
+
   const exists = await db.query.customer.findFirst({
     where: eq(customer.id, parsed.id),
   });
