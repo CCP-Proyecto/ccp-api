@@ -5,9 +5,16 @@ import { HTTPException } from "hono/http-exception";
 
 import { db } from "@/db";
 import { customer } from "@/db/schema/customer-schema";
+import { salesperson } from "@/db/schema/salesperson-schema";
 import { createCustomerSchema, updateCustomerSchema } from "./schema";
 
 const customerRouter = new Hono();
+
+const customerExists = async (id: string) => {
+  return await db.query.customer.findFirst({
+    where: eq(customer.id, id),
+  });
+};
 
 customerRouter.get("/", async (c) => {
   const customers = await db.select().from(customer);
@@ -38,7 +45,7 @@ customerRouter.post("/", async (c) => {
       cause: parsed.summary,
     });
   }
-
+  
   const exists = await db.query.customer.findFirst({
     where: eq(customer.id, parsed.id),
   });
@@ -47,6 +54,21 @@ customerRouter.post("/", async (c) => {
     throw new HTTPException(400, {
       message: "Customer already exists",
     });
+  }
+
+  const {salespersonId} = parsed;
+
+  if (salespersonId) {
+    const salespersonExists = await db.query.salesperson.findFirst({
+      where: eq(salesperson.id, salespersonId),
+    });
+
+    if (!salespersonExists) {
+      throw new HTTPException(400, {
+        message: "Invalid request body",
+        cause: "Salesperson does not exist",
+      });
+    }
   }
 
   const created = await db.insert(customer).values(parsed).returning();
@@ -64,9 +86,11 @@ customerRouter.put("/:id", async (c) => {
     });
   }
 
+  const { salespersonId, ...updateData } = parsed;
+
   const updated = await db
     .update(customer)
-    .set(parsed)
+    .set(updateData)
     .where(eq(customer.id, c.req.param("id")))
     .returning();
 
@@ -79,8 +103,51 @@ customerRouter.put("/:id", async (c) => {
   return c.json(updated[0]);
 });
 
+customerRouter.patch("/:id/salesperson", async (c) => {
+  const { salespersonId } = await c.req.json();
+
+  if (!salespersonId) {
+    throw new HTTPException(400, {
+      message: "salespersonId is required",
+    });
+  }
+
+  const customerId = c.req.param("id");
+
+  const customerExists = await db.query.customer.findFirst({
+    where: eq(customer.id, customerId),
+  });
+
+  if (!customerExists) {
+    throw new HTTPException(404, {
+      message: "Customer not found",
+    });
+  }
+
+  const salespersonExists = await db.query.salesperson.findFirst({
+    where: eq(salesperson.id, salespersonId),
+  });
+
+  if (!salespersonExists) {
+    throw new HTTPException(400, {
+      message: "Salesperson not found",
+    });
+  }
+
+  const updated = await db
+    .update(customer)
+    .set({ salespersonId })
+    .where(eq(customer.id, customerId))
+    .returning();
+
+  return c.json(updated[0]);
+});
+
 customerRouter.delete("/:id", async (c) => {
-  const deleted = await db.delete(customer).where(eq(customer.id, c.req.param("id"))).returning();
+  const deleted = await db
+    .delete(customer)
+    .where(eq(customer.id, c.req.param("id")))
+    .returning();
 
   if (!deleted || deleted.length === 0) {
     throw new HTTPException(404, {

@@ -155,3 +155,51 @@ BEGIN
         ON UPDATE no action;
     END IF;
 END $$;
+
+-- Create salesperson table if it doesn't exist
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'salesperson') THEN
+        CREATE TABLE "salesperson" (
+            "id" serial PRIMARY KEY NOT NULL,
+            "id_type" text NOT NULL,
+            "name" text NOT NULL,
+            "email" text NOT NULL UNIQUE,
+            "phone" text NOT NULL,
+            "created_at" timestamp DEFAULT now() NOT NULL,
+            "updated_at" timestamp DEFAULT now() NOT NULL
+        );
+    END IF;
+END $$;
+
+-- Create customer table if it doesn't exist
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'customer') THEN
+        CREATE TABLE "customer" (
+            "id" serial PRIMARY KEY NOT NULL,
+            "id_type" text NOT NULL,
+            "name" text NOT NULL,
+            "address" text NOT NULL,
+            "phone" text NOT NULL,
+            "salesperson_id" integer,
+            "created_at" timestamp DEFAULT now() NOT NULL,
+            "updated_at" timestamp DEFAULT now() NOT NULL
+        );
+    END IF;
+END $$;
+
+-- Add foreign key constraint for customer -> salesperson
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'customer_salesperson_id_salesperson_id_fk'
+    ) THEN
+        ALTER TABLE "customer"
+        ADD CONSTRAINT "customer_salesperson_id_salesperson_id_fk"
+        FOREIGN KEY ("salesperson_id")
+        REFERENCES "public"."salesperson"("id")
+        ON DELETE SET NULL
+        ON UPDATE NO ACTION;
+    END IF;
+END $$;
