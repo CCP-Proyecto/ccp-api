@@ -4,6 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
+    "check:write": "biome check --write .",
     "dev": "bun run --hot src/index.ts",
     "start": "bun run db:migrate && bun run src/index.ts",
     "db:generate": "drizzle-kit generate",
