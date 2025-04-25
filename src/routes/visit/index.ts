@@ -66,7 +66,7 @@ visitRouter.post("/", async (c) => {
 
   const createdVisit = await db
     .insert(visit)
-    .values({ ...parsedVisit, date: new Date(parsedVisit.visitDate) })
+    .values({ ...parsedVisit,visitDate : new Date(parsedVisit.visitDate) })
     .returning();
 
   return c.json(createdVisit[0]);
@@ -112,7 +112,7 @@ visitRouter.put("/:id", async (c) => {
     .update(visit)
     .set({
       ...parsedVisit,
-      date: parsedVisit.visitDate ? new Date(parsedVisit.visitDate) : undefined,
+      visitDate: parsedVisit.visitDate ? new Date(parsedVisit.visitDate) : undefined,
       updatedAt: new Date(),
     })
     .where(eq(visit.id, Number.parseInt(c.req.param("id"))))
