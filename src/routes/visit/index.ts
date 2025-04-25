@@ -4,6 +4,8 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 
 import { db } from "@/db";
+import { customer } from "@/db/schema/customer-schema";
+import { salesperson } from "@/db/schema/salesperson-schema";
 import { visit } from "@/db/schema/visit-schema";
 import { createVisitSchema, updateVisitSchema } from "./schema";
 
@@ -39,10 +41,34 @@ visitRouter.post("/", async (c) => {
     });
   }
 
+  const { customerId, salespersonId } = parsedVisit;
+
+  const [customerExists, salespersonExists] = await Promise.all([
+    db.query.customer.findFirst({
+      where: eq(customer.id, customerId),
+    }),
+    db.query.salesperson.findFirst({
+      where: eq(salesperson.id, salespersonId),
+    }),
+  ]);
+
+  if (!customerExists) {
+    throw new HTTPException(400, {
+      message: "Customer does not exist",
+    });
+  }
+
+  if (!salespersonExists) {
+    throw new HTTPException(400, {
+      message: "Salesperson does not exist",
+    });
+  }
+
   const createdVisit = await db
     .insert(visit)
-    .values({ ...parsedVisit, date: new Date(parsedVisit.date) })
+    .values({ ...parsedVisit, date: new Date(parsedVisit.visitDate) })
     .returning();
+
   return c.json(createdVisit[0]);
 });
 
@@ -57,11 +83,36 @@ visitRouter.put("/:id", async (c) => {
     });
   }
 
+  const { customerId, salespersonId } = parsedVisit;
+
+  // Validate referenced entities only if they are being updated
+  if (customerId) {
+    const customerExists = await db.query.customer.findFirst({
+      where: eq(customer.id, customerId),
+    });
+    if (!customerExists) {
+      throw new HTTPException(400, {
+        message: "Customer does not exist",
+      });
+    }
+  }
+
+  if (salespersonId) {
+    const salespersonExists = await db.query.salesperson.findFirst({
+      where: eq(salesperson.id, salespersonId),
+    });
+    if (!salespersonExists) {
+      throw new HTTPException(400, {
+        message: "Salesperson does not exist",
+      });
+    }
+  }
+
   const updatedVisit = await db
     .update(visit)
     .set({
       ...parsedVisit,
-      date: parsedVisit.date ? new Date(parsedVisit.date) : undefined,
+      date: parsedVisit.visitDate ? new Date(parsedVisit.visitDate) : undefined,
       updatedAt: new Date(),
     })
     .where(eq(visit.id, Number.parseInt(c.req.param("id"))))

@@ -13,7 +13,7 @@ export const customer = pgTable("customer", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
   salespersonId: text("salesperson_id").references(() => salesperson.id, {
     onDelete: "set null",
-  }), // or "cascade" if preferred
+  }),
 });
 
 export const customerRelations = relations(customer, ({ one, many }) => ({

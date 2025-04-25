@@ -286,38 +286,36 @@ BEGIN
     IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'visit') THEN
         CREATE TABLE "visit" (
             "id" serial PRIMARY KEY NOT NULL,
-            "date" timestamp NOT NULL,
+            "salesperson_id" text NOT NULL,
+            "customer_id" text NOT NULL,
+            "visit_date" timestamp NOT NULL DEFAULT now(),
             "comments" text NOT NULL,
-            "customerId" text NOT NULL,
-            "salespersonId" text NOT NULL,
-            "created_at" timestamp DEFAULT now() NOT NULL,
-            "updated_at" timestamp DEFAULT now() NOT NULL
+            "created_at" timestamp NOT NULL DEFAULT now(),
+            "updated_at" timestamp NOT NULL DEFAULT now()
         );
     END IF;
 END $$;
 
--- Add foreign key constraints for visit table
+-- Add foreign key constraints for visit
 DO $$
 BEGIN
     IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint WHERE conname = 'visit_customerId_customer_id_fk'
+        SELECT 1 FROM pg_constraint WHERE conname = 'visit_salesperson_id_salesperson_id_fk'
     ) THEN
         ALTER TABLE "visit"
-        ADD CONSTRAINT "visit_customerId_customer_id_fk"
-        FOREIGN KEY ("customerId")
-        REFERENCES "public"."customer"("id")
-        ON DELETE cascade
-        ON UPDATE no action;
+        ADD CONSTRAINT "visit_salesperson_id_salesperson_id_fk"
+        FOREIGN KEY ("salesperson_id")
+        REFERENCES "public"."salesperson"("id")
+        ON DELETE CASCADE;
     END IF;
 
     IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint WHERE conname = 'visit_salespersonId_salesperson_id_fk'
+        SELECT 1 FROM pg_constraint WHERE conname = 'visit_customer_id_customer_id_fk'
     ) THEN
         ALTER TABLE "visit"
-        ADD CONSTRAINT "visit_salespersonId_salesperson_id_fk"
-        FOREIGN KEY ("salespersonId")
-        REFERENCES "public"."salesperson"("id")
-        ON DELETE cascade
-        ON UPDATE no action;
+        ADD CONSTRAINT "visit_customer_id_customer_id_fk"
+        FOREIGN KEY ("customer_id")
+        REFERENCES "public"."customer"("id")
+        ON DELETE CASCADE;
     END IF;
 END $$;
