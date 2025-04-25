@@ -5,7 +5,7 @@ import { HTTPException } from "hono/http-exception";
 
 import { db } from "@/db";
 import { inventory } from "@/db/schema/inventory-schema";
-import { store } from "@/db/schema/store-schema";
+import { warehouse } from "@/db/schema/warehouse-schema";
 import { createInventorySchema, updateInventorySchema } from "./schema";
 
 const inventoryRouter = new Hono();
@@ -13,7 +13,7 @@ const inventoryRouter = new Hono();
 inventoryRouter.get("/", async (c) => {
   const inventories = await db.query.inventory.findMany({
     with: {
-      store: true,
+      warehouse: true,
     },
   });
   return c.json(inventories);
@@ -23,7 +23,7 @@ inventoryRouter.get("/:id", async (c) => {
   const selectedInventory = await db.query.inventory.findFirst({
     where: eq(inventory.id, Number(c.req.param("id"))),
     with: {
-      store: true,
+      warehouse: true,
     },
   });
 
@@ -45,21 +45,21 @@ inventoryRouter.post("/", async (c) => {
     });
   }
 
-  const storeId = parsedInventory.inventories[0]?.storeId;
+  const warehouseId = parsedInventory.inventories[0]?.warehouseId;
 
-  if (!storeId) {
+  if (!warehouseId) {
     throw new HTTPException(400, {
-      message: "Store ID is required",
+      message: "Warehouse ID is required",
     });
   }
 
-  const storeExists = await db.query.store.findFirst({
-    where: eq(store.id, storeId),
+  const warehouseExists = await db.query.warehouse.findFirst({
+    where: eq(warehouse.id, warehouseId),
   });
 
-  if (!storeExists) {
+  if (!warehouseExists) {
     throw new HTTPException(400, {
-      message: "Store does not exist",
+      message: "Warehouse does not exist",
     });
   }
 

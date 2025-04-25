@@ -1,22 +1,22 @@
 import { relations } from "drizzle-orm";
 import { integer, pgTable, serial, timestamp } from "drizzle-orm/pg-core";
 import { product } from "./product-schema";
-import { store } from "./store-schema";
+import { warehouse } from "./warehouse-schema";
 
 export const inventory = pgTable("inventory", {
   id: serial("id").primaryKey(),
   quantity: integer("available_quantity").notNull(),
-  storeId: integer("store_id")
+  warehouseId: integer("warehouse_id")
     .notNull()
-    .references(() => store.id, { onDelete: "cascade" }),
+    .references(() => warehouse.id, { onDelete: "cascade" }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const inventoryRelations = relations(inventory, ({ one, many }) => ({
-  store: one(store, {
-    fields: [inventory.storeId],
-    references: [store.id],
+  warehouse: one(warehouse, {
+    fields: [inventory.warehouseId],
+    references: [warehouse.id],
   }),
   products: many(inventoryProduct),
 }));

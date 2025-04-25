@@ -10,7 +10,7 @@ import {
   order,
   product,
   salesperson,
-  store,
+  warehouse,
 } from "@/routes";
 import { HTTPException } from "hono/http-exception";
 
@@ -18,14 +18,14 @@ const app = new Hono();
 
 app.use(logger());
 
-app.use("/api/*", verifySession);
+// app.use("/api/*", verifySession);
 
 app.route("/api/manufacturer", manufacturer);
 app.route("/api/product", product);
 app.route("/api/customer", customer);
 app.route("/api/order", order);
 app.route("/api/salesperson", salesperson);
-app.route("/api/store", store);
+app.route("/api/warehouse", warehouse);
 app.route("/api/inventory", inventory);
 
 app.onError((error, c) => {

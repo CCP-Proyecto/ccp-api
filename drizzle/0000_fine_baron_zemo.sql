@@ -204,11 +204,11 @@ BEGIN
     END IF;
 END $$;
 
--- Create store table if it doesn't exist
+-- Create warehouse table if it doesn't exist
 DO $$
 BEGIN
-    IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'store') THEN
-        CREATE TABLE "store" (
+    IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'warehouse') THEN
+        CREATE TABLE "warehouse" (
             "id" serial PRIMARY KEY NOT NULL,
             "location" text NOT NULL,
             "created_at" timestamp DEFAULT now() NOT NULL,
@@ -224,23 +224,23 @@ BEGIN
         CREATE TABLE "inventory" (
             "id" serial PRIMARY KEY NOT NULL,
             "available_quantity" integer NOT NULL,
-            "store_id" integer NOT NULL,
+            "warehouse_id" integer NOT NULL,
             "created_at" timestamp DEFAULT now() NOT NULL,
             "updated_at" timestamp DEFAULT now() NOT NULL
         );
     END IF;
 END $$;
 
--- Add foreign key constraint for inventory -> store
+-- Add foreign key constraint for inventory -> warehouse
 DO $$
 BEGIN
     IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint WHERE conname = 'inventory_store_id_store_id_fk'
+        SELECT 1 FROM pg_constraint WHERE conname = 'inventory_warehouse_id_warehouse_id_fk'
     ) THEN
         ALTER TABLE "inventory"
-        ADD CONSTRAINT "inventory_store_id_store_id_fk"
-        FOREIGN KEY ("store_id")
-        REFERENCES "public"."store"("id")
+        ADD CONSTRAINT "inventory_warehouse_id_warehouse_id_fk"
+        FOREIGN KEY ("warehouse_id")
+        REFERENCES "public"."warehouse"("id")
         ON DELETE cascade
         ON UPDATE no action;
     END IF;

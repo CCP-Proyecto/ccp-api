@@ -6,4 +6,4 @@ export * from "./product-schema";
 export * from "./salesperson-schema";
 export * from "./visit-schema";
 export * from "./inventory-schema";
-export * from "./store-schema";
+export * from "./warehouse-schema";

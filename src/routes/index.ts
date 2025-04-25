@@ -4,4 +4,4 @@ export { product } from "./product/";
 export { customer } from "./customer/";
 export { salesperson } from "./salesperson/";
 export { inventory } from "./inventory/";
-export { store } from "./store/";
+export { warehouse } from "./warehouse";

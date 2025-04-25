@@ -3,7 +3,7 @@ import { type } from "arktype";
 export const inventorySchema = type({
   quantity: "number.integer",
   productId: "string.numeric",
-  storeId: "string.numeric",
+  warehouseId: "string.numeric",
 });
 
 export const createInventorySchema = type({
