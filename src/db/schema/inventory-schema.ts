@@ -5,7 +5,7 @@ import { warehouse } from "./warehouse-schema";
 
 export const inventory = pgTable("inventory", {
   id: serial("id").primaryKey(),
-  quantity: integer("available_quantity").notNull(),
+  quantity: integer("quantity").notNull(),
   warehouseId: integer("warehouse_id")
     .notNull()
     .references(() => warehouse.id, { onDelete: "cascade" }),

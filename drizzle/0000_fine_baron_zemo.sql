@@ -223,7 +223,7 @@ BEGIN
     IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'inventory') THEN
         CREATE TABLE "inventory" (
             "id" serial PRIMARY KEY NOT NULL,
-            "available_quantity" integer NOT NULL,
+            "quantity" integer NOT NULL,
             "warehouse_id" integer NOT NULL,
             "created_at" timestamp DEFAULT now() NOT NULL,
             "updated_at" timestamp DEFAULT now() NOT NULL

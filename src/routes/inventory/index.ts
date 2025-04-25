@@ -85,7 +85,7 @@ inventoryRouter.put("/:id", async (c) => {
   const updated = await db
     .update(inventory)
     .set({
-      parsedInventory,
+      ...parsedInventory,
       updatedAt: new Date(),
     })
     .where(eq(inventory.id, Number(c.req.param("id"))))
