@@ -84,7 +84,10 @@ customerRouter.put("/:id", async (c) => {
 
   const updated = await db
     .update(customer)
-    .set(updateData)
+    .set({
+      updateData,
+      updatedAt: new Date(),
+    })
     .where(eq(customer.id, c.req.param("id")))
     .returning();
 

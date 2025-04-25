@@ -56,7 +56,10 @@ visitRouter.put("/:id", async (c) => {
 
   const updatedVisit = await db
     .update(visit)
-    .set(parsedVisit)
+    .set({
+      parsedVisit,
+      updatedAt: new Date(),
+    })
     .where(eq(visit.id, Number.parseInt(c.req.param("id"))))
     .returning();
 

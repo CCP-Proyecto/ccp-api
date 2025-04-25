@@ -1,5 +1,5 @@
 -- Create account table if it doesn't exist
-DO $$ 
+DO $$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'account') THEN
         CREATE TABLE "account" (
@@ -21,7 +21,7 @@ BEGIN
 END $$;
 
 -- Create session table if it doesn't exist
-DO $$ 
+DO $$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'session') THEN
         CREATE TABLE "session" (
@@ -39,7 +39,7 @@ BEGIN
 END $$;
 
 -- Create user table if it doesn't exist
-DO $$ 
+DO $$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'user') THEN
         CREATE TABLE "user" (
@@ -57,7 +57,7 @@ BEGIN
 END $$;
 
 -- Create verification table if it doesn't exist
-DO $$ 
+DO $$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'verification') THEN
         CREATE TABLE "verification" (
@@ -72,7 +72,7 @@ BEGIN
 END $$;
 
 -- Create manufacturer table if it doesn't exist
-DO $$ 
+DO $$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'manufacturer') THEN
         CREATE TABLE "manufacturer" (
@@ -89,7 +89,7 @@ BEGIN
 END $$;
 
 -- Create order table if it doesn't exist
-DO $$ 
+DO $$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'order') THEN
         CREATE TABLE "order" (
@@ -102,7 +102,7 @@ BEGIN
 END $$;
 
 -- Create product table if it doesn't exist
-DO $$ 
+DO $$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'product') THEN
         CREATE TABLE "product" (
@@ -120,44 +120,44 @@ BEGIN
 END $$;
 
 -- Add foreign key constraints if they don't exist
-DO $$ 
+DO $$
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM pg_constraint WHERE conname = 'account_user_id_user_id_fk'
     ) THEN
-        ALTER TABLE "account" 
-        ADD CONSTRAINT "account_user_id_user_id_fk" 
-        FOREIGN KEY ("user_id") 
-        REFERENCES "public"."user"("id") 
-        ON DELETE cascade 
+        ALTER TABLE "account"
+        ADD CONSTRAINT "account_user_id_user_id_fk"
+        FOREIGN KEY ("user_id")
+        REFERENCES "public"."user"("id")
+        ON DELETE cascade
         ON UPDATE no action;
     END IF;
-    
+
     IF NOT EXISTS (
         SELECT 1 FROM pg_constraint WHERE conname = 'session_user_id_user_id_fk'
     ) THEN
-        ALTER TABLE "session" 
-        ADD CONSTRAINT "session_user_id_user_id_fk" 
-        FOREIGN KEY ("user_id") 
-        REFERENCES "public"."user"("id") 
-        ON DELETE cascade 
+        ALTER TABLE "session"
+        ADD CONSTRAINT "session_user_id_user_id_fk"
+        FOREIGN KEY ("user_id")
+        REFERENCES "public"."user"("id")
+        ON DELETE cascade
         ON UPDATE no action;
     END IF;
-    
+
     IF NOT EXISTS (
         SELECT 1 FROM pg_constraint WHERE conname = 'product_manufacturer_id_manufacturer_id_fk'
     ) THEN
-        ALTER TABLE "product" 
-        ADD CONSTRAINT "product_manufacturer_id_manufacturer_id_fk" 
-        FOREIGN KEY ("manufacturer_id") 
-        REFERENCES "public"."manufacturer"("id") 
-        ON DELETE cascade 
+        ALTER TABLE "product"
+        ADD CONSTRAINT "product_manufacturer_id_manufacturer_id_fk"
+        FOREIGN KEY ("manufacturer_id")
+        REFERENCES "public"."manufacturer"("id")
+        ON DELETE cascade
         ON UPDATE no action;
     END IF;
 END $$;
 
 -- Create salesperson table if it doesn't exist
-DO $$ 
+DO $$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'salesperson') THEN
         CREATE TABLE "salesperson" (
@@ -173,7 +173,7 @@ BEGIN
 END $$;
 
 -- Create customer table if it doesn't exist
-DO $$ 
+DO $$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'customer') THEN
         CREATE TABLE "customer" (
@@ -201,5 +201,82 @@ BEGIN
         REFERENCES "public"."salesperson"("id")
         ON DELETE SET NULL
         ON UPDATE NO ACTION;
+    END IF;
+END $$;
+
+-- Create store table if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'store') THEN
+        CREATE TABLE "store" (
+            "id" serial PRIMARY KEY NOT NULL,
+            "location" text NOT NULL,
+            "created_at" timestamp DEFAULT now() NOT NULL,
+            "updated_at" timestamp DEFAULT now() NOT NULL
+        );
+    END IF;
+END $$;
+
+-- Create inventory table if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'inventory') THEN
+        CREATE TABLE "inventory" (
+            "id" serial PRIMARY KEY NOT NULL,
+            "available_quantity" integer NOT NULL,
+            "store_id" integer NOT NULL,
+            "created_at" timestamp DEFAULT now() NOT NULL,
+            "updated_at" timestamp DEFAULT now() NOT NULL
+        );
+    END IF;
+END $$;
+
+-- Add foreign key constraint for inventory -> store
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'inventory_store_id_store_id_fk'
+    ) THEN
+        ALTER TABLE "inventory"
+        ADD CONSTRAINT "inventory_store_id_store_id_fk"
+        FOREIGN KEY ("store_id")
+        REFERENCES "public"."store"("id")
+        ON DELETE cascade
+        ON UPDATE no action;
+    END IF;
+END $$;
+
+-- Create inventory_product join table if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'inventory_product') THEN
+        CREATE TABLE "inventory_product" (
+            "inventory_id" integer NOT NULL,
+            "product_id" integer NOT NULL
+        );
+    END IF;
+END $$;
+
+-- Add foreign key constraints for inventory_product
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'inventory_product_inventory_id_fk'
+    ) THEN
+        ALTER TABLE "inventory_product"
+        ADD CONSTRAINT "inventory_product_inventory_id_fk"
+        FOREIGN KEY ("inventory_id")
+        REFERENCES "public"."inventory"("id")
+        ON DELETE cascade;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'inventory_product_product_id_fk'
+    ) THEN
+        ALTER TABLE "inventory_product"
+        ADD CONSTRAINT "inventory_product_product_id_fk"
+        FOREIGN KEY ("product_id")
+        REFERENCES "public"."product"("id")
+        ON DELETE cascade;
     END IF;
 END $$;
