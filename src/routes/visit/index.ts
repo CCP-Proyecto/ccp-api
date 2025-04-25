@@ -39,7 +39,10 @@ visitRouter.post("/", async (c) => {
     });
   }
 
-  const createdVisit = await db.insert(visit).values(parsedVisit).returning();
+  const createdVisit = await db
+    .insert(visit)
+    .values({ ...parsedVisit, date: new Date(parsedVisit.date) })
+    .returning();
   return c.json(createdVisit[0]);
 });
 
@@ -56,7 +59,11 @@ visitRouter.put("/:id", async (c) => {
 
   const updatedVisit = await db
     .update(visit)
-    .set(parsedVisit)
+    .set({
+      ...parsedVisit,
+      date: parsedVisit.date ? new Date(parsedVisit.date) : undefined,
+      updatedAt: new Date(),
+    })
     .where(eq(visit.id, Number.parseInt(c.req.param("id"))))
     .returning();
 

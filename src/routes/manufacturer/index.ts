@@ -73,7 +73,10 @@ manufacturerRouter.put("/:id", async (c) => {
 
   const updatedManufacturer = await db
     .update(manufacturer)
-    .set(parsedManufacturer)
+    .set({
+      ...parsedManufacturer,
+      updatedAt: new Date(),
+    })
     .where(eq(manufacturer.id, c.req.param("id")))
     .returning();
 

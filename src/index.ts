@@ -3,7 +3,15 @@ import { Hono } from "hono";
 import { logger } from "hono/logger";
 
 import { verifySession } from "@/middlewares";
-import { customer, manufacturer, order, product, salesperson } from "@/routes";
+import {
+  customer,
+  inventory,
+  manufacturer,
+  order,
+  product,
+  salesperson,
+  warehouse,
+} from "@/routes";
 import { HTTPException } from "hono/http-exception";
 
 const app = new Hono();
@@ -17,6 +25,8 @@ app.route("/api/product", product);
 app.route("/api/customer", customer);
 app.route("/api/order", order);
 app.route("/api/salesperson", salesperson);
+app.route("/api/warehouse", warehouse);
+app.route("/api/inventory", inventory);
 
 app.onError((error, c) => {
   if (!(error instanceof HTTPException)) {
