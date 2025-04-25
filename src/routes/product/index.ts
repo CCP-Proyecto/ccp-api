@@ -110,7 +110,7 @@ productRouter.put("/:id", async (c) => {
   const updatedProduct = await db
     .update(product)
     .set({
-      parsedProduct,
+      ...parsedProduct,
       updatedAt: new Date(),
     })
     .where(eq(product.id, Number(c.req.param("id"))))

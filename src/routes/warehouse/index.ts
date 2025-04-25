@@ -59,7 +59,7 @@ warehouseRouter.put("/:id", async (c) => {
   const updated = await db
     .update(warehouse)
     .set({
-      parsedWarehouse,
+      ...parsedWarehouse,
       updatedAt: new Date(),
     })
     .where(eq(warehouse.id, Number(c.req.param("id"))))

@@ -110,7 +110,6 @@ BEGIN
             "name" text NOT NULL,
             "description" text NOT NULL,
             "price" numeric(10, 2),
-            "amount" integer NOT NULL,
             "storage_condition" text NOT NULL,
             "manufacturer_id" text NOT NULL,
             "created_at" timestamp DEFAULT now() NOT NULL,
@@ -161,7 +160,7 @@ DO $$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'salesperson') THEN
         CREATE TABLE "salesperson" (
-            "id" serial PRIMARY KEY NOT NULL,
+            "id" text PRIMARY KEY NOT NULL,
             "id_type" text NOT NULL,
             "name" text NOT NULL,
             "email" text NOT NULL UNIQUE,
@@ -177,12 +176,12 @@ DO $$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'customer') THEN
         CREATE TABLE "customer" (
-            "id" serial PRIMARY KEY NOT NULL,
+            "id" text PRIMARY KEY NOT NULL,
             "id_type" text NOT NULL,
             "name" text NOT NULL,
             "address" text NOT NULL,
             "phone" text NOT NULL,
-            "salesperson_id" integer,
+            "salesperson_id" text,
             "created_at" timestamp DEFAULT now() NOT NULL,
             "updated_at" timestamp DEFAULT now() NOT NULL
         );
@@ -278,5 +277,47 @@ BEGIN
         FOREIGN KEY ("product_id")
         REFERENCES "public"."product"("id")
         ON DELETE cascade;
+    END IF;
+END $$;
+
+-- Create visit table if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'visit') THEN
+        CREATE TABLE "visit" (
+            "id" serial PRIMARY KEY NOT NULL,
+            "date" timestamp NOT NULL,
+            "comments" text NOT NULL,
+            "customerId" text NOT NULL,
+            "salespersonId" text NOT NULL,
+            "created_at" timestamp DEFAULT now() NOT NULL,
+            "updated_at" timestamp DEFAULT now() NOT NULL
+        );
+    END IF;
+END $$;
+
+-- Add foreign key constraints for visit table
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'visit_customerId_customer_id_fk'
+    ) THEN
+        ALTER TABLE "visit"
+        ADD CONSTRAINT "visit_customerId_customer_id_fk"
+        FOREIGN KEY ("customerId")
+        REFERENCES "public"."customer"("id")
+        ON DELETE cascade
+        ON UPDATE no action;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'visit_salespersonId_salesperson_id_fk'
+    ) THEN
+        ALTER TABLE "visit"
+        ADD CONSTRAINT "visit_salespersonId_salesperson_id_fk"
+        FOREIGN KEY ("salespersonId")
+        REFERENCES "public"."salesperson"("id")
+        ON DELETE cascade
+        ON UPDATE no action;
     END IF;
 END $$;

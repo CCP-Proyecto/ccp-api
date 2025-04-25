@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 import { customer } from "./customer-schema";
 import { salesperson } from "./salesperson-schema";
 
@@ -7,14 +7,14 @@ export const visit = pgTable("visit", {
   id: serial("id").primaryKey(),
   date: timestamp("date").notNull(),
   comments: text("comments").notNull(),
-  customerId: integer("customer_id")
+  customerId: text("customer_id")
     .notNull()
     .references(() => customer.id),
-  salespersonId: integer("salesperson_id")
+  salespersonId: text("salesperson_id")
     .notNull()
     .references(() => salesperson.id),
-  createdAt: timestamp("created_at").notNull(),
-  updatedAt: timestamp("updated_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
 export const visitRelations = relations(visit, ({ one }) => ({

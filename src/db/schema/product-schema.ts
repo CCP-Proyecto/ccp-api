@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 import { numericAsNumber } from "../types/custom-types";
 import { manufacturer } from "./manufacturer-schema";
 
@@ -8,7 +8,6 @@ export const product = pgTable("product", {
   name: text("name").notNull(),
   description: text("description").notNull(),
   price: numericAsNumber("price", { precision: 10, scale: 2 }),
-  amount: integer("amount").notNull(),
   storageCondition: text("storage_condition").notNull(),
   manufacturerId: text("manufacturer_id")
     .notNull()

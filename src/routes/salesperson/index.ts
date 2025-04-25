@@ -67,7 +67,7 @@ salespersonRouter.put("/:id", async (c) => {
   const updated = await db
     .update(salesperson)
     .set({
-      parsed,
+      ...parsed,
       updatedAt: new Date(),
     })
     .where(eq(salesperson.id, c.req.param("id")))

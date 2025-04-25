@@ -1,7 +1,7 @@
 import { type } from "arktype";
 
 export const createVisitSchema = type({
-  date: "string",
+  date: "string.date",
   comments: "string",
   customerId: "string.numeric",
   salespersonId: "string.numeric",

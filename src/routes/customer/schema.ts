@@ -6,7 +6,7 @@ export const createCustomerSchema = type({
   name: "string",
   address: "string",
   phone: "string",
-  "salespersonId?": "string.numeric"
+  "salespersonId?": "string.numeric",
 });
 
 export const updateCustomerSchema = createCustomerSchema.partial();
