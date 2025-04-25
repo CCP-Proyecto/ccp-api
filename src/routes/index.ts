@@ -5,3 +5,4 @@ export { customer } from "./customer/";
 export { salesperson } from "./salesperson/";
 export { inventory } from "./inventory/";
 export { warehouse } from "./warehouse";
+export { visit } from "./visit";
