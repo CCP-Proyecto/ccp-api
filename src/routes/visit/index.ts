@@ -4,9 +4,9 @@ import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 
 import { db } from "@/db";
-import { visit } from "@/db/schema/visit-schema";
 import { customer } from "@/db/schema/customer-schema";
 import { salesperson } from "@/db/schema/salesperson-schema";
+import { visit } from "@/db/schema/visit-schema";
 import { createVisitSchema, updateVisitSchema } from "./schema";
 
 const visitRouter = new Hono();
@@ -126,7 +126,6 @@ visitRouter.put("/:id", async (c) => {
 
   return c.json(updatedVisit[0]);
 });
-
 
 visitRouter.delete("/:id", async (c) => {
   const deletedVisit = await db

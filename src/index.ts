@@ -10,8 +10,8 @@ import {
   order,
   product,
   salesperson,
-  warehouse,
   visit,
+  warehouse,
 } from "@/routes";
 import { HTTPException } from "hono/http-exception";
 

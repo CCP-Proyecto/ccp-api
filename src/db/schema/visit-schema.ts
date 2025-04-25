@@ -5,12 +5,16 @@ import { salesperson } from "./salesperson-schema";
 
 export const visit = pgTable("visit", {
   id: serial("id").primaryKey().notNull(),
-  salespersonId: text("salesperson_id").notNull().references(() => salesperson.id, {
-    onDelete: "cascade",
-  }),
-  customerId: text("customer_id").notNull().references(() => customer.id, {
-    onDelete: "cascade",
-  }),
+  salespersonId: text("salesperson_id")
+    .notNull()
+    .references(() => salesperson.id, {
+      onDelete: "cascade",
+    }),
+  customerId: text("customer_id")
+    .notNull()
+    .references(() => customer.id, {
+      onDelete: "cascade",
+    }),
   visitDate: timestamp("visit_date", { mode: "date" }).notNull().defaultNow(),
   comments: text("comments").notNull(),
   createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),

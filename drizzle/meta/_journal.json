@@ -8,6 +8,13 @@
       "when": 1744170776271,
       "tag": "0000_fine_baron_zemo",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1745611774098,
+      "tag": "0001_tough_bishop",
+      "breakpoints": true
     }
   ]
 }
