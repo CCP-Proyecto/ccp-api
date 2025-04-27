@@ -1,3 +1,4 @@
+import { DeliveryStatus } from "@/constants";
 import { type } from "arktype";
 
 export const createDeliverySchema = type({
@@ -8,8 +9,8 @@ export const createDeliverySchema = type({
 });
 
 export const updateDeliverySchema = type({
-  status: "'in transit' | 'delivered' | 'failed'",
-  actualDeliveryDate: "string",
+  "status?": type.valueOf(DeliveryStatus),
+  "actualDeliveryDate?": "string",
   "trackingNumber?": "string",
-  notes: "string",
-}).partial();
+  "notes?": "string",
+});

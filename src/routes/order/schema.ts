@@ -1,3 +1,4 @@
+import { OrderStatus } from "@/constants";
 import { type } from "arktype";
 
 export const orderProductSchema = type({
@@ -13,5 +14,5 @@ export const createOrderSchema = type({
 });
 
 export const updateOrderSchema = type({
-  status: "'pending' | 'sent' | 'delivered'",
+  status: type.valueOf(OrderStatus),
 }).partial();

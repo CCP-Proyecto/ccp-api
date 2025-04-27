@@ -7,13 +7,9 @@ import {
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
-import { order } from "./order-schema";
 
-export const deliveryStatus = {
-  IN_TRANSIT: "in transit",
-  DELIVERED: "delivered",
-  FAILED: "failed",
-} as const;
+import { DeliveryStatus } from "@/constants";
+import { order } from "./order-schema";
 
 export const delivery = pgTable("delivery", {
   id: serial("id").primaryKey(),
@@ -21,13 +17,14 @@ export const delivery = pgTable("delivery", {
   actualDeliveryDate: date("actual_delivery_date"),
   status: text("status", {
     enum: [
-      deliveryStatus.IN_TRANSIT,
-      deliveryStatus.DELIVERED,
-      deliveryStatus.FAILED,
+      DeliveryStatus.DELIVERED,
+      DeliveryStatus.FAILED,
+      DeliveryStatus.IN_TRANSIT,
+      DeliveryStatus.PENDING,
     ],
   })
     .notNull()
-    .default(deliveryStatus.IN_TRANSIT),
+    .default(DeliveryStatus.PENDING),
   trackingNumber: text("tracking_number"),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),

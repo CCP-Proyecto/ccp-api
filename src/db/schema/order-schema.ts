@@ -5,20 +5,15 @@ import { customer } from "./customer-schema";
 import { delivery } from "./delivery-schema";
 import { product } from "./product-schema";
 import { salesperson } from "./salesperson-schema";
-
-export const orderStatus = {
-  PENDING: "pending",
-  SENT: "sent",
-  DELIVERED: "delivered",
-} as const;
+import { OrderStatus } from "@/constants";
 
 export const order = pgTable("order", {
   id: serial("id").primaryKey(),
   status: text("status", {
-    enum: [orderStatus.PENDING, orderStatus.SENT, orderStatus.DELIVERED],
+    enum: [OrderStatus.PENDING, OrderStatus.SENT, OrderStatus.DELIVERED],
   })
     .notNull()
-    .default(orderStatus.PENDING),
+    .default(OrderStatus.PENDING),
   total: numericAsNumber("total", { precision: 10, scale: 2 }).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

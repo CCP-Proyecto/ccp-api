@@ -100,23 +100,10 @@ deliveryRouter.patch("/:id", async (c) => {
     });
   }
 
-  interface UpdateData {
-    updatedAt: Date;
-    status?: "delivered" | "in transit" | "failed";
-    actualDeliveryDate?: string;
-    trackingNumber?: string;
-    notes?: string;
-  }
-
-  const updateData: UpdateData = {
-    updatedAt: new Date(),
-  };
+  const updateData: typeof updateDeliverySchema.infer = {};
 
   if (parsedDelivery.status) {
-    updateData.status = parsedDelivery.status as
-      | "delivered"
-      | "in transit"
-      | "failed";
+    updateData.status = parsedDelivery.status;
   }
   if (parsedDelivery.actualDeliveryDate) {
     updateData.actualDeliveryDate = parsedDelivery.actualDeliveryDate;
@@ -130,7 +117,10 @@ deliveryRouter.patch("/:id", async (c) => {
 
   const updated = await db
     .update(delivery)
-    .set(updateData)
+    .set({
+      ...updateData,
+      updatedAt: new Date(),
+    })
     .where(eq(delivery.id, Number(c.req.param("id"))))
     .returning();
 
