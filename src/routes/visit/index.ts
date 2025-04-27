@@ -66,7 +66,7 @@ visitRouter.post("/", async (c) => {
 
   const createdVisit = await db
     .insert(visit)
-    .values({ ...parsedVisit,visitDate : new Date(parsedVisit.visitDate) })
+    .values({ ...parsedVisit, visitDate: new Date(parsedVisit.visitDate) })
     .returning();
 
   return c.json(createdVisit[0]);
@@ -85,7 +85,6 @@ visitRouter.put("/:id", async (c) => {
 
   const { customerId, salespersonId } = parsedVisit;
 
-  // Validate referenced entities only if they are being updated
   if (customerId) {
     const customerExists = await db.query.customer.findFirst({
       where: eq(customer.id, customerId),
@@ -112,7 +111,9 @@ visitRouter.put("/:id", async (c) => {
     .update(visit)
     .set({
       ...parsedVisit,
-      visitDate: parsedVisit.visitDate ? new Date(parsedVisit.visitDate) : undefined,
+      visitDate: parsedVisit.visitDate
+        ? new Date(parsedVisit.visitDate)
+        : undefined,
       updatedAt: new Date(),
     })
     .where(eq(visit.id, Number.parseInt(c.req.param("id"))))
