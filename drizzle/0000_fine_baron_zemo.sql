@@ -135,7 +135,7 @@ BEGIN
             "created_at" timestamp DEFAULT now() NOT NULL,
             "updated_at" timestamp DEFAULT now() NOT NULL,
             CONSTRAINT "delivery_status_check" CHECK (
-                "status" IN ('in transit', 'delivered', 'failed')
+                "status" IN ('in transit', 'delivered', 'failed', 'pending')
             )
         );
     END IF;
