@@ -83,6 +83,7 @@ deliveryRouter.post("/", async (c) => {
       estimatedDeliveryDate: parsedDelivery.estimatedDeliveryDate,
       trackingNumber: parsedDelivery.trackingNumber,
       notes: parsedDelivery.notes,
+      address: parsedDelivery.address,
     })
     .returning();
 
@@ -113,6 +114,9 @@ deliveryRouter.patch("/:id", async (c) => {
   }
   if (parsedDelivery.notes) {
     updateData.notes = parsedDelivery.notes;
+  }
+  if (parsedDelivery.address) {
+    updateData.address = parsedDelivery.address;
   }
 
   const updated = await db

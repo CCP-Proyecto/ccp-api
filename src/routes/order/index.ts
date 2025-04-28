@@ -1,5 +1,5 @@
 import { type } from "arktype";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 
@@ -79,7 +79,7 @@ orderRouter.post("/", async (c) => {
 
   const productIds = parsedOrder.products.map((p) => p.productId);
   const products = await db.query.product.findMany({
-    where: and(...productIds.map((id) => eq(product.id, id))),
+    where: inArray(product.id, productIds),
   });
 
   if (products.length !== productIds.length) {

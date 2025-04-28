@@ -6,6 +6,7 @@ export const createDeliverySchema = type({
   estimatedDeliveryDate: "string",
   "trackingNumber?": "string",
   "notes?": "string",
+  address: "string",
 });
 
 export const updateDeliverySchema = type({
@@ -13,4 +14,5 @@ export const updateDeliverySchema = type({
   "actualDeliveryDate?": "string",
   "trackingNumber?": "string",
   "notes?": "string",
+  "address?": "string",
 });

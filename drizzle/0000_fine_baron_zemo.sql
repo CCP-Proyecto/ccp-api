@@ -131,6 +131,7 @@ BEGIN
             "status" text NOT NULL DEFAULT 'in transit',
             "tracking_number" text,
             "notes" text,
+            "address" text,
             "order_id" integer NOT NULL UNIQUE,
             "created_at" timestamp DEFAULT now() NOT NULL,
             "updated_at" timestamp DEFAULT now() NOT NULL,

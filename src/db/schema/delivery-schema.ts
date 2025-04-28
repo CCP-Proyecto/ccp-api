@@ -27,6 +27,7 @@ export const delivery = pgTable("delivery", {
     .default(DeliveryStatus.PENDING),
   trackingNumber: text("tracking_number"),
   notes: text("notes"),
+  address: text("address"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 
