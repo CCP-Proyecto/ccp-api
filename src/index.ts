@@ -23,7 +23,7 @@ const app = new Hono();
 
 app.use(logger());
 
-app.use("/api/*", verifySession);
+// app.use("/api/*", verifySession);
 
 app.route("/api/manufacturer", manufacturer);
 app.route("/api/product", product);
