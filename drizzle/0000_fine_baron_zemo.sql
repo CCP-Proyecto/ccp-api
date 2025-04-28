@@ -337,6 +337,21 @@ BEGIN
     END IF;
 END $$;
 
+-- Create report table if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'report') THEN
+        CREATE TABLE "report" (
+            "id" serial PRIMARY KEY NOT NULL,
+            "description" text NOT NULL,
+            "date" timestamp NOT NULL,
+            "salesperson_id" text NOT NULL REFERENCES "salesperson"("id"),
+            "created_at" timestamp NOT NULL DEFAULT now(),
+            "updated_at" timestamp NOT NULL DEFAULT now()
+        );
+    END IF;
+END $$;
+
 -- Add foreign key constraints for visit
 DO $$
 BEGIN
@@ -429,5 +444,35 @@ BEGIN
         FOREIGN KEY ("order_id")
         REFERENCES "public"."order"("id")
         ON DELETE CASCADE;
+    END IF;
+END $$;
+
+-- Add foreign key constraint for order -> salesperson
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'order_salesperson_id_salesperson_id_fk'
+    ) THEN
+        ALTER TABLE "order"
+        ADD CONSTRAINT "order_salesperson_id_salesperson_id_fk"
+        FOREIGN KEY ("salesperson_id")
+        REFERENCES "public"."salesperson"("id")
+        ON DELETE SET NULL
+        ON UPDATE NO ACTION;
+    END IF;
+END $$;
+
+-- Add foreign key constraint for report -> salesperson
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'report_salesperson_id_salesperson_id_fk'
+    ) THEN
+        ALTER TABLE "report"
+        ADD CONSTRAINT "report_salesperson_id_salesperson_id_fk"
+        FOREIGN KEY ("salesperson_id")
+        REFERENCES "public"."salesperson"("id")
+        ON DELETE cascade
+        ON UPDATE no action;
     END IF;
 END $$;

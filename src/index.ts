@@ -13,6 +13,7 @@ import {
   visit,
   warehouse,
   delivery,
+  report,
 } from "@/routes";
 import { HTTPException } from "hono/http-exception";
 
@@ -31,6 +32,7 @@ app.route("/api/warehouse", warehouse);
 app.route("/api/inventory", inventory);
 app.route("/api/visit", visit);
 app.route("/api/delivery", delivery);
+app.route("/api/report", report);
 
 
 app.onError((error, c) => {
