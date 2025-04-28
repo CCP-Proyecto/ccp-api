@@ -94,9 +94,50 @@ BEGIN
     IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'order') THEN
         CREATE TABLE "order" (
             "id" serial PRIMARY KEY NOT NULL,
-            "products" json NOT NULL,
+            "status" text NOT NULL DEFAULT 'pending',
+            "total" numeric(10, 2) NOT NULL,
+            "customer_id" text NOT NULL,
+            "salesperson_id" text,
             "created_at" timestamp DEFAULT now() NOT NULL,
-            "updated_at" timestamp DEFAULT now() NOT NULL
+            "updated_at" timestamp DEFAULT now() NOT NULL,
+            CONSTRAINT "order_status_check" CHECK (
+                "status" IN ('pending', 'sent', 'delivered')
+            )
+        );
+    END IF;
+END $$;
+
+-- Create order_product join table if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'order_product') THEN
+        CREATE TABLE "order_product" (
+            "order_id" integer NOT NULL,
+            "product_id" integer NOT NULL,
+            "quantity" integer NOT NULL,
+            "price_at_order" numeric(10, 2) NOT NULL
+        );
+    END IF;
+END $$;
+
+-- Create delivery table if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'delivery') THEN
+        CREATE TABLE "delivery" (
+            "id" serial PRIMARY KEY NOT NULL,
+            "estimated_delivery_date" date NOT NULL,
+            "actual_delivery_date" date,
+            "status" text NOT NULL DEFAULT 'in transit',
+            "tracking_number" text,
+            "notes" text,
+            "address" text,
+            "order_id" integer NOT NULL UNIQUE,
+            "created_at" timestamp DEFAULT now() NOT NULL,
+            "updated_at" timestamp DEFAULT now() NOT NULL,
+            CONSTRAINT "delivery_status_check" CHECK (
+                "status" IN ('in transit', 'delivered', 'failed', 'pending')
+            )
         );
     END IF;
 END $$;
@@ -316,6 +357,77 @@ BEGIN
         ADD CONSTRAINT "visit_customer_id_customer_id_fk"
         FOREIGN KEY ("customer_id")
         REFERENCES "public"."customer"("id")
+        ON DELETE CASCADE;
+    END IF;
+END $$;
+
+-- Add foreign key constraints for order -> customer and order -> salesperson
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'order_customer_id_customer_id_fk'
+    ) THEN
+        ALTER TABLE "order"
+        ADD CONSTRAINT "order_customer_id_customer_id_fk"
+        FOREIGN KEY ("customer_id")
+        REFERENCES "public"."customer"("id")
+        ON DELETE CASCADE;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'order_salesperson_id_salesperson_id_fk'
+    ) THEN
+        ALTER TABLE "order"
+        ADD CONSTRAINT "order_salesperson_id_salesperson_id_fk"
+        FOREIGN KEY ("salesperson_id")
+        REFERENCES "public"."salesperson"("id")
+        ON DELETE CASCADE;
+    END IF;
+END $$;
+
+-- Add foreign key constraints for order_product
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'order_product_order_id_fk'
+    ) THEN
+        ALTER TABLE "order_product"
+        ADD CONSTRAINT "order_product_order_id_fk"
+        FOREIGN KEY ("order_id")
+        REFERENCES "public"."order"("id")
+        ON DELETE CASCADE;
+    END IF;
+
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'order_product_product_id_fk'
+    ) THEN
+        ALTER TABLE "order_product"
+        ADD CONSTRAINT "order_product_product_id_fk"
+        FOREIGN KEY ("product_id")
+        REFERENCES "public"."product"("id")
+        ON DELETE CASCADE;
+    END IF;
+
+    -- Add composite primary key for order_product
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'order_product_pkey'
+    ) THEN
+        ALTER TABLE "order_product"
+        ADD CONSTRAINT "order_product_pkey"
+        PRIMARY KEY ("order_id", "product_id");
+    END IF;
+END $$;
+
+-- Add foreign key constraint for delivery -> order
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'delivery_order_id_fk'
+    ) THEN
+        ALTER TABLE "delivery"
+        ADD CONSTRAINT "delivery_order_id_fk"
+        FOREIGN KEY ("order_id")
+        REFERENCES "public"."order"("id")
         ON DELETE CASCADE;
     END IF;
 END $$;

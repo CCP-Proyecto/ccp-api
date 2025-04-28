@@ -12,6 +12,7 @@ import {
   salesperson,
   visit,
   warehouse,
+  delivery,
 } from "@/routes";
 import { HTTPException } from "hono/http-exception";
 
@@ -29,6 +30,8 @@ app.route("/api/salesperson", salesperson);
 app.route("/api/warehouse", warehouse);
 app.route("/api/inventory", inventory);
 app.route("/api/visit", visit);
+app.route("/api/delivery", delivery);
+
 
 app.onError((error, c) => {
   if (!(error instanceof HTTPException)) {
