@@ -5,6 +5,7 @@ import { logger } from "hono/logger";
 import { verifySession } from "@/middlewares";
 import {
   customer,
+  delivery,
   inventory,
   manufacturer,
   order,
@@ -12,7 +13,6 @@ import {
   salesperson,
   visit,
   warehouse,
-  delivery,
 } from "@/routes";
 import { HTTPException } from "hono/http-exception";
 
@@ -31,7 +31,6 @@ app.route("/api/warehouse", warehouse);
 app.route("/api/inventory", inventory);
 app.route("/api/visit", visit);
 app.route("/api/delivery", delivery);
-
 
 app.onError((error, c) => {
   if (!(error instanceof HTTPException)) {
