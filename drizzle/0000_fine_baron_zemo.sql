@@ -361,9 +361,13 @@ BEGIN
             "description" text NOT NULL,
             "date" timestamp NOT NULL,
             "salesperson_id" text NOT NULL REFERENCES "salesperson"("id"),
+            "customer_id" text NOT NULL REFERENCES "customer"("id"),  -- Added customer relationship
             "created_at" timestamp NOT NULL DEFAULT now(),
             "updated_at" timestamp NOT NULL DEFAULT now()
         );
+
+        -- Create index for better query performance on customer_id
+        CREATE INDEX IF NOT EXISTS "statement_customer_id_idx" ON "statement" ("customer_id");
     END IF;
 END $$;
 
@@ -536,3 +540,98 @@ BEGIN
         ON UPDATE no action;
     END IF;
 END $$;
+
+-- Add foreign key constraint for statement -> customer
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'statement_customer_id_customer_id_fk'
+    ) THEN
+        ALTER TABLE "statement"
+        ADD CONSTRAINT "statement_customer_id_customer_id_fk"
+        FOREIGN KEY ("customer_id")
+        REFERENCES "public"."customer"("id")
+        ON DELETE CASCADE
+        ON UPDATE NO ACTION;
+    END IF;
+END $$;
+
+-- Insert initial data for all tables
+
+-- -- Insert manufacturers
+INSERT INTO "manufacturer" ("id", "id_type", "name", "phone", "address", "email", "created_at", "updated_at") VALUES
+('1100000000', 'NIT', 'AgroProductos SAS', '6012345678', 'Calle 123, Bogotá', 'contacto@agroproductos.com', '2025-05-02 18:23:47.167406', '2025-05-02 18:23:47.167406'),
+('1100000001', 'NIT', 'Lácteos del Campo', '6023456789', 'Carrera 45, Medellín', 'info@lacteosdelcampo.com', '2025-05-02 18:23:47.167406', '2025-05-02 18:23:47.167406'),
+('1100000002', 'NIT', 'Arrocera Nacional', '6034567890', 'Avenida 67, Cali', 'ventas@arroceranacional.com', '2025-05-02 18:23:47.167406', '2025-05-02 18:23:47.167406');
+
+-- Insert products
+INSERT INTO "product" ("id", "name", "description", "price", "storage_condition", "manufacturer_id", "created_at", "updated_at") VALUES
+(1, 'Papa', 'Test descripcion', 1000.00, 'No aplica', '1100000000', '2025-05-02 18:23:47.167406', '2025-05-02 18:23:47.167406'),
+(2, 'Queso campesino', 'Por kilo', 8000.00, 'Refrigerar en nevera', '1100000000', '2025-05-02 18:23:47.167406', '2025-05-02 18:23:47.167406'),
+(3, 'Arroz', 'Por libra', 300.00, 'No aplica', '1100000000', '2025-05-02 18:23:47.167406', '2025-05-02 18:23:47.167406');
+
+-- Insert users
+INSERT INTO "user" ("id", "name", "email", "email_verified", "image", "created_at", "updated_at", "roles") VALUES
+(1, 'Admin Principal', 'admin@empresa.com', true, NULL, '2025-05-02 18:23:47.167406', '2025-05-02 18:23:47.167406', '{admin}'),
+(2, 'Vendedor Ejemplo', 'vendedor@empresa.com', true, NULL, '2025-05-02 18:23:47.167406', '2025-05-02 18:23:47.167406', '{sales}'),
+(3, 'Cliente Demo', 'cliente@empresa.com', false, NULL, '2025-05-02 18:23:47.167406', '2025-05-02 18:23:47.167406', '{customer}');
+
+-- Insert accounts
+INSERT INTO "account" ("id", "account_id", "provider_id", "user_id", "access_token", "refresh_token", "id_token", "access_token_expires_at", "refresh_token_expires_at", "scope", "password", "created_at", "updated_at") VALUES
+(1, 'acc_admin', 'email', 1, NULL, NULL, NULL, NULL, NULL, NULL, '$2a$10$xJwL5v5Jz5UZJz5UZJz5Ue', '2025-05-02 18:23:47.167406', '2025-05-02 18:23:47.167406'),
+(2, 'acc_vendedor', 'email', 2, NULL, NULL, NULL, NULL, NULL, NULL, '$2a$10$xJwL5v5Jz5UZJz5UZJz5Ue', '2025-05-02 18:23:47.167406', '2025-05-02 18:23:47.167406'),
+(3, 'acc_cliente', 'email', 3, NULL, NULL, NULL, NULL, NULL, NULL, '$2a$10$xJwL5v5Jz5UZJz5UZJz5Ue', '2025-05-02 18:23:47.167406', '2025-05-02 18:23:47.167406');
+
+-- Insert salespersons
+INSERT INTO "salesperson" ("id", "id_type", "name", "email", "phone", "created_at", "updated_at") VALUES
+('1234567890', 'CC', 'Carlos Pérez', 'carlos@empresa.com', '3001112233', NOW(), NOW()),
+('9876543210', 'CC', 'María Gómez', 'maria@empresa.com', '3002223344', NOW(), NOW()),
+('4567891230', 'CC', 'Juan Rodríguez', 'juan@empresa.com', '3003334455', NOW(), NOW());
+
+-- Insert customers
+INSERT INTO "customer" ("id", "id_type", "name", "address", "phone", "salesperson_id", "created_at", "updated_at") VALUES
+('9001234567', 'NIT', 'Supermercado La Economía', 'Calle 10 #20-30, Bogotá', '6012345678', '1234567890', NOW(), NOW()),
+('9007654321', 'NIT', 'Tienda El Ahorro', 'Carrera 50 #80-10, Medellín', '6045678901', '9876543210', NOW(), NOW()),
+('9005678912', 'NIT', 'Mercado Campesino', 'Avenida 6N #20-45, Cali', '6023456789', '4567891230', NOW(), NOW());
+
+-- Insert warehouses
+INSERT INTO "warehouse" ("id", "location", "created_at", "updated_at") VALUES
+(1, 'Bodega Norte, Bogotá', NOW(), NOW()),
+(2, 'Centro de Distribución Occidente', NOW(), NOW()),
+(3, 'Bodega Sur, Cali', NOW(), NOW());
+
+-- Insert inventory
+INSERT INTO "inventory" ("id", "quantity", "warehouse_id", "created_at", "updated_at") VALUES
+(1, 500, 1, NOW(), NOW()),
+(2, 200, 2, NOW(), NOW()),
+(3, 1000, 3, NOW(), NOW());
+
+-- Insert inventory_product relationships
+INSERT INTO "inventory_product" ("inventory_id", "product_id") VALUES
+(1, 1),
+(2, 2),
+(3, 3);
+
+-- Insert orders
+INSERT INTO "order" ("id", "status", "total", "customer_id", "salesperson_id", "created_at", "updated_at") VALUES
+(1, 'pending', 10000.00, '9001234567', '1234567890', NOW(), NOW()),
+(2, 'sent', 16000.00, '9007654321', '9876543210', NOW(), NOW()),
+(3, 'delivered', 3000.00, '9005678912', '4567891230', NOW(), NOW());
+
+-- Insert order_product relationships
+INSERT INTO "order_product" ("order_id", "product_id", "quantity", "price_at_order") VALUES
+(1, 1, 10, 1000.00),
+(2, 2, 2, 8000.00),
+(3, 3, 10, 300.00);
+
+-- Insert deliveries
+INSERT INTO "delivery" ("id", "estimated_delivery_date", "actual_delivery_date", "status", "tracking_number", "notes", "address", "order_id", "created_at", "updated_at") VALUES
+(1, NOW() + INTERVAL '2 days', NULL, 'in transit', 'CO123456789', 'Entregar antes de las 2pm', 'Calle 10 #20-30, Bogotá', 1, NOW(), NOW()),
+(2, NOW() + INTERVAL '1 day', NULL, 'in transit', 'CO987654321', 'Requerida firma', 'Carrera 50 #80-10, Medellín', 2, NOW(), NOW()),
+(3, NOW(), NOW(), 'delivered', 'CO567891234', 'Entregado a recepción', 'Avenida 6N #20-45, Cali', 3, NOW(), NOW());
+
+-- Insert visits
+INSERT INTO "visit" ("id", "salesperson_id", "customer_id", "visit_date", "comments", "created_at", "updated_at") VALUES
+(1, '1234567890', '9001234567', NOW() - INTERVAL '3 days', 'Presentación nuevos productos', NOW(), NOW()),
+(2, '9876543210', '9007654321', NOW() - INTERVAL '1 day', 'Seguimiento pedido pendiente', NOW(), NOW()),
+(3, '4567891230', '9005678912', NOW() - INTERVAL '1 week', 'Visita inicial a nuevo cliente', NOW(), NOW());

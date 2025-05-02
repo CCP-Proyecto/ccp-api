@@ -6,7 +6,9 @@ export const report = pgTable("report", {
   id: serial("id").primaryKey(),
   description: text("description").notNull(),
   Date: timestamp("date").notNull(),
-  salespersonId: text("salesperson_id").notNull().references(() => salesperson.id),
+  salespersonId: text("salesperson_id")
+    .notNull()
+    .references(() => salesperson.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

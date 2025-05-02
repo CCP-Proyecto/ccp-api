@@ -1,7 +1,7 @@
-import { type } from "arktype";
-import { integer, pgTable } from "drizzle-orm/pg-core";
 import { inventory } from "@/db/schema/inventory-schema";
 import { product } from "@/db/schema/product-schema";
+import { type } from "arktype";
+import { integer, pgTable } from "drizzle-orm/pg-core";
 
 export const inventorySchema = type({
   quantity: "number.integer",

@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 import { pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { salesperson } from "./salesperson-schema";
+import { statement } from "./statement-schema";
 import { visit } from "./visit-schema";
 
 export const customer = pgTable("customer", {
@@ -22,4 +23,5 @@ export const customerRelations = relations(customer, ({ one, many }) => ({
     references: [salesperson.id],
   }),
   visits: many(visit),
+  statements: many(statement),
 }));

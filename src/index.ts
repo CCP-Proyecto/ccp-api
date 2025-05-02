@@ -10,12 +10,12 @@ import {
   manufacturer,
   order,
   product,
+  report,
+  salesPlan,
   salesperson,
+  statement,
   visit,
   warehouse,
-  report,
-  statement,
-  salesPlan,
 } from "@/routes";
 import { HTTPException } from "hono/http-exception";
 
