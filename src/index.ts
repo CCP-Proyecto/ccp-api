@@ -5,6 +5,7 @@ import { logger } from "hono/logger";
 import { verifySession } from "@/middlewares";
 import {
   customer,
+  delivery,
   inventory,
   manufacturer,
   order,
@@ -12,7 +13,6 @@ import {
   salesperson,
   visit,
   warehouse,
-  delivery,
   report,
   statement,
   salesPlan,

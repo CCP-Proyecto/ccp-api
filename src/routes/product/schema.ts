@@ -4,7 +4,6 @@ export const productSchema = type({
   name: "string",
   description: "string",
   price: "number >= 0",
-  amount: "number.integer",
   storageCondition: "string",
   manufacturerId: "string.numeric",
 });

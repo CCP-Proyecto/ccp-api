@@ -141,6 +141,26 @@ customerRouter.patch("/:id/salesperson", async (c) => {
   return c.json(updated[0]);
 });
 
+customerRouter.get("/salesperson/:salespersonId", async (c) => {
+  const salespersonId = c.req.param("salespersonId");
+
+  const salespersonExists = await db.query.salesperson.findFirst({
+    where: eq(salesperson.id, salespersonId),
+  });
+
+  if (!salespersonExists) {
+    throw new HTTPException(404, {
+      message: "Salesperson not found",
+    });
+  }
+
+  const customers = await db.query.customer.findMany({
+    where: eq(customer.salespersonId, salespersonId),
+  });
+
+  return c.json(customers);
+});
+
 customerRouter.delete("/:id", async (c) => {
   const deleted = await db
     .delete(customer)
