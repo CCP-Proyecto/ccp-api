@@ -172,6 +172,34 @@ orderRouter.patch("/:id", async (c) => {
   return c.json(updated[0]);
 });
 
+orderRouter.get("/customer/:customerId", async (c) => {
+  const customerId = c.req.param("customerId");
+
+  const customerExists = await db.query.customer.findFirst({
+    where: eq(customer.id, customerId),
+  });
+  if (!customerExists) {
+    throw new HTTPException(404, { message: "Customer not found" });
+  }
+
+  const orders = await db.query.order.findMany({
+    where: eq(order.customerId, customerId),
+    with: {
+      customer: true,
+      salesperson: true,
+      orderProducts: {
+        with: {
+          product: true,
+        },
+      },
+      delivery: true,
+    },
+    orderBy: (order, { desc }) => [desc(order.createdAt)],
+  });
+
+  return c.json(orders);
+});
+
 orderRouter.delete("/:id", async (c) => {
   const deleted = await db
     .delete(order)
