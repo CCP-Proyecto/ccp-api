@@ -3,6 +3,7 @@ import { type } from "arktype";
 
 export const orderProductSchema = type({
   productId: "number.integer",
+  "salespersonId?":"string.numeric",
   quantity: "number.integer",
   "priceAtOrder?": "number",
 });

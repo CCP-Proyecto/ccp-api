@@ -7,3 +7,6 @@ export { inventory } from "./inventory/";
 export { warehouse } from "./warehouse";
 export { visit } from "./visit";
 export { delivery } from "./delivery";
+export { report } from "./report";
+export { statement } from "./statement";
+export { salesPlan } from "./salesPlan";

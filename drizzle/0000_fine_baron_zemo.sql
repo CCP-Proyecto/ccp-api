@@ -128,7 +128,7 @@ BEGIN
             "id" serial PRIMARY KEY NOT NULL,
             "estimated_delivery_date" date NOT NULL,
             "actual_delivery_date" date,
-            "status" text NOT NULL DEFAULT 'in transit',
+            "status" text NOT NULL DEFAULT 'pending',
             "tracking_number" text,
             "notes" text,
             "address" text,
@@ -337,6 +337,51 @@ BEGIN
     END IF;
 END $$;
 
+-- Create report table if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'report') THEN
+        CREATE TABLE "report" (
+            "id" serial PRIMARY KEY NOT NULL,
+            "description" text NOT NULL,
+            "date" timestamp NOT NULL,
+            "salesperson_id" text NOT NULL REFERENCES "salesperson"("id"),
+            "created_at" timestamp NOT NULL DEFAULT now(),
+            "updated_at" timestamp NOT NULL DEFAULT now()
+        );
+    END IF;
+END $$;
+
+-- Create statement table if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'statement') THEN
+        CREATE TABLE "statement" (
+            "id" serial PRIMARY KEY NOT NULL,
+            "description" text NOT NULL,
+            "date" timestamp NOT NULL,
+            "salesperson_id" text NOT NULL REFERENCES "salesperson"("id"),
+            "created_at" timestamp NOT NULL DEFAULT now(),
+            "updated_at" timestamp NOT NULL DEFAULT now()
+        );
+    END IF;
+END $$;
+
+-- Create salesPlan table if it doesn't exist
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'salesPlan') THEN
+        CREATE TABLE "salesPlan" (
+            "id" serial PRIMARY KEY NOT NULL,
+            "description" text NOT NULL,
+            "date" timestamp NOT NULL,
+            "salesperson_id" text NOT NULL REFERENCES "salesperson"("id"),
+            "created_at" timestamp NOT NULL DEFAULT now(),
+            "updated_at" timestamp NOT NULL DEFAULT now()
+        );
+    END IF;
+END $$;
+
 -- Add foreign key constraints for visit
 DO $$
 BEGIN
@@ -429,5 +474,65 @@ BEGIN
         FOREIGN KEY ("order_id")
         REFERENCES "public"."order"("id")
         ON DELETE CASCADE;
+    END IF;
+END $$;
+
+-- Add foreign key constraint for order -> salesperson
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'order_salesperson_id_salesperson_id_fk'
+    ) THEN
+        ALTER TABLE "order"
+        ADD CONSTRAINT "order_salesperson_id_salesperson_id_fk"
+        FOREIGN KEY ("salesperson_id")
+        REFERENCES "public"."salesperson"("id")
+        ON DELETE SET NULL
+        ON UPDATE NO ACTION;
+    END IF;
+END $$;
+
+-- Add foreign key constraint for report -> salesperson
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'report_salesperson_id_salesperson_id_fk'
+    ) THEN
+        ALTER TABLE "report"
+        ADD CONSTRAINT "report_salesperson_id_salesperson_id_fk"
+        FOREIGN KEY ("salesperson_id")
+        REFERENCES "public"."salesperson"("id")
+        ON DELETE cascade
+        ON UPDATE no action;
+    END IF;
+END $$;
+
+-- Add foreign key constraint for statement -> salesperson
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'statement_salesperson_id_salesperson_id_fk'
+    ) THEN
+        ALTER TABLE "statement"
+        ADD CONSTRAINT "statement_salesperson_id_salesperson_id_fk"
+        FOREIGN KEY ("salesperson_id")
+        REFERENCES "public"."salesperson"("id")
+        ON DELETE cascade
+        ON UPDATE no action;
+    END IF;
+END $$;
+
+-- Add foreign key constraint for salesPlan -> salesperson
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'salesPlan_salesperson_id_salesperson_id_fk'
+    ) THEN
+        ALTER TABLE "salesPlan"
+        ADD CONSTRAINT "salesPlan_salesperson_id_salesperson_id_fk"
+        FOREIGN KEY ("salesperson_id")
+        REFERENCES "public"."salesperson"("id")
+        ON DELETE cascade
+        ON UPDATE no action;
     END IF;
 END $$;
