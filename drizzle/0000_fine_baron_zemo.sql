@@ -361,9 +361,13 @@ BEGIN
             "description" text NOT NULL,
             "date" timestamp NOT NULL,
             "salesperson_id" text NOT NULL REFERENCES "salesperson"("id"),
+            "customer_id" text NOT NULL REFERENCES "customer"("id"),  -- Added customer relationship
             "created_at" timestamp NOT NULL DEFAULT now(),
             "updated_at" timestamp NOT NULL DEFAULT now()
         );
+
+        -- Create index for better query performance on customer_id
+        CREATE INDEX IF NOT EXISTS "statement_customer_id_idx" ON "statement" ("customer_id");
     END IF;
 END $$;
 
@@ -534,5 +538,20 @@ BEGIN
         REFERENCES "public"."salesperson"("id")
         ON DELETE cascade
         ON UPDATE no action;
+    END IF;
+END $$;
+
+-- Add foreign key constraint for statement -> customer
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint WHERE conname = 'statement_customer_id_customer_id_fk'
+    ) THEN
+        ALTER TABLE "statement"
+        ADD CONSTRAINT "statement_customer_id_customer_id_fk"
+        FOREIGN KEY ("customer_id")
+        REFERENCES "public"."customer"("id")
+        ON DELETE CASCADE
+        ON UPDATE NO ACTION;
     END IF;
 END $$;

@@ -1,3 +1,4 @@
+import { OrderStatus } from "@/constants";
 import { relations } from "drizzle-orm";
 import { integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 import { numericAsNumber } from "../types/custom-types";
@@ -5,7 +6,6 @@ import { customer } from "./customer-schema";
 import { delivery } from "./delivery-schema";
 import { product } from "./product-schema";
 import { salesperson } from "./salesperson-schema";
-import { OrderStatus } from "@/constants";
 
 export const order = pgTable("order", {
   id: serial("id").primaryKey(),

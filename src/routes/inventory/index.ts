@@ -71,7 +71,10 @@ inventoryRouter.post("/", async (c) => {
     });
   }
 
-  if (!parsedInventory.inventories || parsedInventory.inventories.length === 0) {
+  if (
+    !parsedInventory.inventories ||
+    parsedInventory.inventories.length === 0
+  ) {
     throw new HTTPException(400, { message: "Inventory data is required" });
   }
 
@@ -82,7 +85,11 @@ inventoryRouter.post("/", async (c) => {
 
   const { warehouseId, productId, quantity } = firstInventory;
 
-  if (warehouseId === undefined || productId === undefined || quantity === undefined) {
+  if (
+    warehouseId === undefined ||
+    productId === undefined ||
+    quantity === undefined
+  ) {
     throw new HTTPException(400, {
       message: "Warehouse ID, Product ID, and quantity are required",
     });
@@ -139,7 +146,7 @@ inventoryRouter.post("/", async (c) => {
 
   const response = {
     ...result,
-    productIds: result.products.map(ip => ip.product.id),
+    productIds: result.products.map((ip) => ip.product.id),
   };
 
   return c.json(response, 201);
@@ -157,7 +164,7 @@ inventoryRouter.put("/:id", async (c) => {
   }
 
   const inventoryId = Number(c.req.param("id"));
-  if (isNaN(inventoryId)) {
+  if (Number.isNaN(inventoryId)) {
     throw new HTTPException(400, { message: "Invalid inventory ID" });
   }
 
@@ -177,7 +184,8 @@ inventoryRouter.put("/:id", async (c) => {
     }
 
     await db.transaction(async (tx) => {
-      await tx.delete(inventoryProduct)
+      await tx
+        .delete(inventoryProduct)
         .where(eq(inventoryProduct.inventoryId, inventoryId));
 
       const insertValues = {
@@ -230,7 +238,7 @@ inventoryRouter.put("/:id", async (c) => {
 inventoryRouter.get("/product/:productId/warehouses", async (c) => {
   const productId = Number(c.req.param("productId"));
 
-  if (isNaN(productId)) {
+  if (Number.isNaN(productId)) {
     throw new HTTPException(400, {
       message: "Invalid product ID",
     });
@@ -273,7 +281,7 @@ inventoryRouter.get("/product/:productId/warehouses", async (c) => {
 inventoryRouter.get("/product/:productId/total-quantity", async (c) => {
   const productId = Number(c.req.param("productId"));
 
-  if (isNaN(productId)) {
+  if (Number.isNaN(productId)) {
     throw new HTTPException(400, {
       message: "Invalid product ID",
     });
@@ -291,10 +299,10 @@ inventoryRouter.get("/product/:productId/total-quantity", async (c) => {
     with: {
       inventory: {
         columns: {
-          quantity: true
-        }
-      }
-    }
+          quantity: true,
+        },
+      },
+    },
   });
 
   const totalQuantity = result.reduce((sum, item) => {
@@ -304,13 +312,13 @@ inventoryRouter.get("/product/:productId/total-quantity", async (c) => {
   return c.json({
     productId,
     productName: productExists.name,
-    totalQuantity
+    totalQuantity,
   });
 });
 
 inventoryRouter.delete("/:id", async (c) => {
   const inventoryId = Number(c.req.param("id"));
-  if (isNaN(inventoryId)) {
+  if (Number.isNaN(inventoryId)) {
     throw new HTTPException(400, { message: "Invalid inventory ID" });
   }
 
@@ -322,11 +330,11 @@ inventoryRouter.delete("/:id", async (c) => {
   }
 
   await db.transaction(async (tx) => {
-    await tx.delete(inventoryProduct)
+    await tx
+      .delete(inventoryProduct)
       .where(eq(inventoryProduct.inventoryId, inventoryId));
 
-    await tx.delete(inventory)
-      .where(eq(inventory.id, inventoryId));
+    await tx.delete(inventory).where(eq(inventory.id, inventoryId));
   });
 
   return c.json({ message: "Inventory deleted successfully" });
