@@ -28,7 +28,6 @@ inventoryRouter.get("/", async (c) => {
     return {
       ...inventory,
       products,
-      productIds: products.map(p => p.id),
     };
   });
 
@@ -56,7 +55,6 @@ inventoryRouter.get("/:id", async (c) => {
   const formattedInventory = {
     ...selectedInventory,
     products,
-    productIds: products.map(p => p.id),
   };
 
   return c.json(formattedInventory);
@@ -139,7 +137,6 @@ inventoryRouter.post("/", async (c) => {
     throw new HTTPException(500, { message: "Failed to create inventory" });
   }
 
-
   const response = {
     ...result,
     productIds: result.products.map(ip => ip.product.id),
@@ -159,37 +156,142 @@ inventoryRouter.put("/:id", async (c) => {
     });
   }
 
-  const updated = await db
-    .update(inventory)
-    .set({
-      ...parsedInventory,
-      updatedAt: new Date(),
-    })
-    .where(eq(inventory.id, Number(c.req.param("id"))))
-    .returning();
+  const inventoryId = Number(c.req.param("id"));
+  if (isNaN(inventoryId)) {
+    throw new HTTPException(400, { message: "Invalid inventory ID" });
+  }
 
-  if (!updated.length) {
-    throw new HTTPException(404, {
-      message: "Inventory not found",
+  const existingInventory = await db.query.inventory.findFirst({
+    where: eq(inventory.id, inventoryId),
+  });
+  if (!existingInventory) {
+    throw new HTTPException(404, { message: "Inventory not found" });
+  }
+
+  if (parsedInventory.productId !== undefined) {
+    const productExists = await db.query.product.findFirst({
+      where: eq(product.id, parsedInventory.productId),
+    });
+    if (!productExists) {
+      throw new HTTPException(400, { message: "Product does not exist" });
+    }
+
+    await db.transaction(async (tx) => {
+      await tx.delete(inventoryProduct)
+        .where(eq(inventoryProduct.inventoryId, inventoryId));
+
+      const insertValues = {
+        inventoryId: inventoryId,
+        productId: parsedInventory.productId as number,
+      };
+
+      await tx.insert(inventoryProduct).values(insertValues);
     });
   }
 
-  return c.json(updated[0]);
+  const updateData: Partial<typeof inventory.$inferInsert> = {
+    updatedAt: new Date(),
+  };
+
+  if (parsedInventory.quantity !== undefined) {
+    updateData.quantity = parsedInventory.quantity;
+  }
+  if (parsedInventory.warehouseId !== undefined) {
+    updateData.warehouseId = parsedInventory.warehouseId;
+  }
+
+  const [updatedInventory] = await db
+    .update(inventory)
+    .set(updateData)
+    .where(eq(inventory.id, inventoryId))
+    .returning();
+
+  if (!updatedInventory) {
+    throw new HTTPException(500, { message: "Failed to update inventory" });
+  }
+
+  const fullInventory = await db.query.inventory.findFirst({
+    where: eq(inventory.id, inventoryId),
+    with: {
+      warehouse: true,
+      products: {
+        with: {
+          product: true,
+        },
+      },
+    },
+  });
+
+  return c.json({
+    ...fullInventory,
+  });
 });
 
 inventoryRouter.delete("/:id", async (c) => {
-  const deleted = await db
-    .delete(inventory)
-    .where(eq(inventory.id, Number(c.req.param("id"))))
-    .returning();
+  const inventoryId = Number(c.req.param("id"));
+  if (isNaN(inventoryId)) {
+    throw new HTTPException(400, { message: "Invalid inventory ID" });
+  }
 
-  if (!deleted.length) {
-    throw new HTTPException(404, {
-      message: "Inventory not found",
+  const existingInventory = await db.query.inventory.findFirst({
+    where: eq(inventory.id, inventoryId),
+  });
+  if (!existingInventory) {
+    throw new HTTPException(404, { message: "Inventory not found" });
+  }
+
+  await db.transaction(async (tx) => {
+    await tx.delete(inventoryProduct)
+      .where(eq(inventoryProduct.inventoryId, inventoryId));
+
+    await tx.delete(inventory)
+      .where(eq(inventory.id, inventoryId));
+  });
+
+  return c.json({ message: "Inventory deleted successfully" });
+});
+
+inventoryRouter.get("/product/:productId/warehouses", async (c) => {
+  const productId = Number(c.req.param("productId"));
+
+  if (isNaN(productId)) {
+    throw new HTTPException(400, {
+      message: "Invalid product ID",
     });
   }
 
-  return c.json({ message: "Inventory deleted successfully" });
+  const productExists = await db.query.product.findFirst({
+    where: eq(product.id, productId),
+  });
+
+  if (!productExists) {
+    throw new HTTPException(404, {
+      message: "Product not found",
+    });
+  }
+
+  const inventoryProducts = await db.query.inventoryProduct.findMany({
+    where: (ip, { eq }) => eq(ip.productId, productId),
+    with: {
+      inventory: {
+        with: {
+          warehouse: true,
+        },
+      },
+    },
+  });
+
+  if (inventoryProducts.length === 0) {
+    return c.json([]);
+  }
+
+  const warehouses = inventoryProducts.map((ip) => ({
+    ...ip.inventory.warehouse,
+    quantity: ip.inventory.quantity,
+    inventoryId: ip.inventory.id,
+  }));
+
+  return c.json(warehouses);
 });
 
 export { inventoryRouter as inventory };
