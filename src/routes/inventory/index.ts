@@ -227,30 +227,6 @@ inventoryRouter.put("/:id", async (c) => {
   });
 });
 
-inventoryRouter.delete("/:id", async (c) => {
-  const inventoryId = Number(c.req.param("id"));
-  if (isNaN(inventoryId)) {
-    throw new HTTPException(400, { message: "Invalid inventory ID" });
-  }
-
-  const existingInventory = await db.query.inventory.findFirst({
-    where: eq(inventory.id, inventoryId),
-  });
-  if (!existingInventory) {
-    throw new HTTPException(404, { message: "Inventory not found" });
-  }
-
-  await db.transaction(async (tx) => {
-    await tx.delete(inventoryProduct)
-      .where(eq(inventoryProduct.inventoryId, inventoryId));
-
-    await tx.delete(inventory)
-      .where(eq(inventory.id, inventoryId));
-  });
-
-  return c.json({ message: "Inventory deleted successfully" });
-});
-
 inventoryRouter.get("/product/:productId/warehouses", async (c) => {
   const productId = Number(c.req.param("productId"));
 
@@ -292,6 +268,68 @@ inventoryRouter.get("/product/:productId/warehouses", async (c) => {
   }));
 
   return c.json(warehouses);
+});
+
+inventoryRouter.get("/product/:productId/total-quantity", async (c) => {
+  const productId = Number(c.req.param("productId"));
+
+  if (isNaN(productId)) {
+    throw new HTTPException(400, {
+      message: "Invalid product ID",
+    });
+  }
+
+  const productExists = await db.query.product.findFirst({
+    where: eq(product.id, productId),
+  });
+  if (!productExists) {
+    throw new HTTPException(404, { message: "Product not found" });
+  }
+
+  const result = await db.query.inventoryProduct.findMany({
+    where: eq(inventoryProduct.productId, productId),
+    with: {
+      inventory: {
+        columns: {
+          quantity: true
+        }
+      }
+    }
+  });
+
+  const totalQuantity = result.reduce((sum, item) => {
+    return sum + (item.inventory?.quantity || 0);
+  }, 0);
+
+  return c.json({
+    productId,
+    productName: productExists.name,
+    totalQuantity
+  });
+});
+
+inventoryRouter.delete("/:id", async (c) => {
+  const inventoryId = Number(c.req.param("id"));
+  if (isNaN(inventoryId)) {
+    throw new HTTPException(400, { message: "Invalid inventory ID" });
+  }
+
+  const existingInventory = await db.query.inventory.findFirst({
+    where: eq(inventory.id, inventoryId),
+  });
+  if (!existingInventory) {
+    throw new HTTPException(404, { message: "Inventory not found" });
+  }
+
+  await db.transaction(async (tx) => {
+    await tx.delete(inventoryProduct)
+      .where(eq(inventoryProduct.inventoryId, inventoryId));
+
+    await tx.delete(inventory)
+      .where(eq(inventory.id, inventoryId));
+  });
+
+  return c.json({ message: "Inventory deleted successfully" });
 });
 
 export { inventoryRouter as inventory };
