@@ -4,6 +4,9 @@ import { HTTPException } from "hono/http-exception";
 import { auth } from "@/lib/auth";
 
 export const verifySession = createMiddleware(async (c, next) => {
+  console.error("*******************************************");
+  console.error(JSON.stringify(c.req.raw.headers));
+  console.error("*******************************************");
   const session = await auth.api.getSession({ headers: c.req.raw.headers });
 
   console.error("*******************************************");
