@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 import { salesperson } from "./salesperson-schema";
 
 export const report = pgTable("report", {
@@ -9,6 +9,9 @@ export const report = pgTable("report", {
   salespersonId: text("salesperson_id")
     .notNull()
     .references(() => salesperson.id),
+  periodType: varchar("period_type", { length: 20 }),
+  periodStart: timestamp("period_start"),
+  periodEnd: timestamp("period_end"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
