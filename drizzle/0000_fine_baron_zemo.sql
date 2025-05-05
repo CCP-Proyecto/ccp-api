@@ -51,7 +51,9 @@ BEGIN
             "created_at" timestamp NOT NULL,
             "updated_at" timestamp NOT NULL,
             "roles" text[] NOT NULL,
-            CONSTRAINT "user_email_unique" UNIQUE("email")
+            "user_id" text NOT NULL,
+            CONSTRAINT "user_email_unique" UNIQUE("email"),
+            CONSTRAINT "user_user_id_unique" UNIQUE("user_id")
         );
     END IF;
 END $$;
@@ -337,7 +339,7 @@ BEGIN
     END IF;
 END $$;
 
--- Create report table if it doesn't exist
+-- Create report table if it doesn't exist with all the new columns
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'report') THEN
@@ -345,10 +347,26 @@ BEGIN
             "id" serial PRIMARY KEY NOT NULL,
             "description" text NOT NULL,
             "date" timestamp NOT NULL,
-            "salesperson_id" text NOT NULL REFERENCES "salesperson"("id"),
+            "salesperson_id" text NOT NULL,
+            "period_type" varchar(20),
+            "period_start" timestamp,
+            "period_end" timestamp,
             "created_at" timestamp NOT NULL DEFAULT now(),
-            "updated_at" timestamp NOT NULL DEFAULT now()
+            "updated_at" timestamp NOT NULL DEFAULT now(),
+
+            -- Foreign key constraint
+            CONSTRAINT "report_salesperson_id_fk"
+            FOREIGN KEY ("salesperson_id")
+            REFERENCES "salesperson"("id")
+            ON DELETE CASCADE
+            ON UPDATE NO ACTION
         );
+
+        -- Create index for better query performance on salesperson_id
+        CREATE INDEX IF NOT EXISTS "report_salesperson_id_idx" ON "report" ("salesperson_id");
+
+        -- Create index for period queries
+        CREATE INDEX IF NOT EXISTS "report_period_start_end_idx" ON "report" ("period_start", "period_end");
     END IF;
 END $$;
 
@@ -555,3 +573,9 @@ BEGIN
         ON UPDATE NO ACTION;
     END IF;
 END $$;
+
+CREATE INDEX IF NOT EXISTS "inventory_warehouse_id_idx" ON "inventory" ("warehouse_id");
+CREATE INDEX IF NOT EXISTS "inventory_product_product_id_idx" ON "inventory_product" ("product_id");
+CREATE INDEX IF NOT EXISTS "order_customer_id_idx" ON "order" ("customer_id");
+CREATE INDEX IF NOT EXISTS "visit_salesperson_id_idx" ON "visit" ("salesperson_id");
+CREATE INDEX IF NOT EXISTS "visit_customer_id_idx" ON "visit" ("customer_id");

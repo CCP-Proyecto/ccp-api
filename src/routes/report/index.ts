@@ -1,12 +1,17 @@
 import { type } from "arktype";
-import { eq } from "drizzle-orm";
+import { and, eq, gte, lt } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 
 import { db } from "@/db";
+import { order } from "@/db/schema/order-schema";
 import { report } from "@/db/schema/report-schema";
 import { salesperson } from "@/db/schema/salesperson-schema";
-import { createReportSchema, updateReportSchema } from "./schema";
+import { addMonths, addQuarters } from "date-fns";
+import {
+  createReportSchema,
+  updateReportSchema,
+} from "./schema";
 
 const reportRouter = new Hono();
 
@@ -52,16 +57,73 @@ reportRouter.post("/", async (c) => {
     throw new HTTPException(400, { message: "Salesperson does not exist" });
   }
 
-  const created = await db
+  const startDate = new Date(parsedReport.startDate);
+  let endDate: Date;
+
+  switch (parsedReport.periodType) {
+    case "monthly":
+      endDate = addMonths(startDate, 1);
+      break;
+    case "quarterly":
+      endDate = addQuarters(startDate, 1);
+      break;
+    case "semiannually":
+      endDate = addMonths(startDate, 6);
+      break;
+    default:
+      throw new HTTPException(400, { message: "Invalid period type" });
+  }
+
+  const orders = await db.query.order.findMany({
+    where: and(
+      eq(order.salespersonId, parsedReport.salespersonId),
+      gte(order.createdAt, startDate),
+      lt(order.createdAt, endDate),
+    ),
+    with: {
+      customer: true,
+      orderProducts: {
+        with: {
+          product: true,
+        },
+      },
+    },
+  });
+
+  const totalOrders = orders.length;
+  const totalRevenue = orders.reduce(
+    (sum, order) => sum + Number(order.total),
+    0,
+  );
+
+  const createdReport = await db
     .insert(report)
     .values({
-      description: parsedReport.description,
-      Date: new Date(parsedReport.date),
+      description: `Sales report for ${parsedReport.periodType} period starting ${startDate.toISOString()}`,
+      Date: new Date(),
       salespersonId: parsedReport.salespersonId,
+      periodType: parsedReport.periodType,
+      periodStart: startDate,
+      periodEnd: endDate,
     })
     .returning();
 
-  return c.json(created[0], 201);
+  return c.json(
+    {
+      report: createdReport[0],
+      period: {
+        start: startDate.toISOString(),
+        end: endDate.toISOString(),
+        type: parsedReport.periodType,
+      },
+      orders,
+      summary: {
+        totalOrders,
+        totalRevenue,
+      },
+    },
+    201,
+  );
 });
 
 reportRouter.patch("/:id", async (c) => {
@@ -107,6 +169,43 @@ reportRouter.patch("/:id", async (c) => {
   }
 
   return c.json(updated[0]);
+});
+
+reportRouter.get("/salesperson/:salespersonId", async (c) => {
+  const salespersonId = c.req.param("salespersonId");
+
+  const salespersonExists = await db.query.salesperson.findFirst({
+    where: eq(salesperson.id, salespersonId),
+  });
+
+  if (!salespersonExists) {
+    throw new HTTPException(404, { message: "Salesperson not found" });
+  }
+
+  const reports = await db.query.report.findMany({
+    where: eq(report.salespersonId, salespersonId),
+    with: {
+      salesperson: true,
+    },
+  });
+
+  const orders = await db.query.order.findMany({
+    where: eq(order.salespersonId, salespersonId),
+    with: {
+      customer: true,
+      salesperson: true,
+      orderProducts: {
+        with: {
+          product: true,
+        },
+      },
+    },
+  });
+
+  return c.json({
+    reports,
+    orders,
+  });
 });
 
 reportRouter.delete("/:id", async (c) => {
