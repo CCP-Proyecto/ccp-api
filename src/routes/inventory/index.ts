@@ -316,6 +316,77 @@ inventoryRouter.get("/product/:productId/total-quantity", async (c) => {
   });
 });
 
+inventoryRouter.get("/product/:productId/warehouse/:warehouseId", async (c) => {
+  const productId = Number(c.req.param("productId"));
+  const warehouseId = Number(c.req.param("warehouseId"));
+
+  if (Number.isNaN(productId)) {
+    throw new HTTPException(400, {
+      message: "Invalid product ID",
+    });
+  }
+
+  if (Number.isNaN(warehouseId)) {
+    throw new HTTPException(400, {
+      message: "Invalid warehouse ID",
+    });
+  }
+
+  const productExists = await db.query.product.findFirst({
+    where: eq(product.id, productId),
+  });
+  if (!productExists) {
+    throw new HTTPException(404, {
+      message: "Product not found",
+    });
+  }
+
+  const warehouseExists = await db.query.warehouse.findFirst({
+    where: eq(warehouse.id, warehouseId),
+  });
+  if (!warehouseExists) {
+    throw new HTTPException(404, {
+      message: "Warehouse not found",
+    });
+  }
+
+  const inventoryRecord = await db.query.inventory.findFirst({
+    where: (inventory, { eq, and }) => and(
+      eq(inventory.warehouseId, warehouseId),
+    ),
+    with: {
+      warehouse: true,
+      products: {
+        where: (ip, { eq }) => eq(ip.productId, productId),
+        with: {
+          product: true,
+        },
+      },
+    },
+  });
+
+  if (!inventoryRecord || inventoryRecord.products.length === 0) {
+    return c.json({
+      message: "Product not found in specified warehouse",
+      product: productExists,
+      warehouse: warehouseExists,
+      quantity: 0,
+    }, 404);
+  }
+
+  const firstProduct = inventoryRecord.products[0];
+  if (!firstProduct) {
+    throw new HTTPException(500, { message: "Unexpected data structure" });
+  }
+
+  return c.json({
+    product: firstProduct.product,
+    warehouse: inventoryRecord.warehouse,
+    quantity: inventoryRecord.quantity,
+    inventoryId: inventoryRecord.id,
+  });
+});
+
 inventoryRouter.delete("/:id", async (c) => {
   const inventoryId = Number(c.req.param("id"));
   if (Number.isNaN(inventoryId)) {

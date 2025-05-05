@@ -574,6 +574,12 @@ BEGIN
     END IF;
 END $$;
 
+CREATE INDEX IF NOT EXISTS "inventory_warehouse_id_idx" ON "inventory" ("warehouse_id");
+CREATE INDEX IF NOT EXISTS "inventory_product_product_id_idx" ON "inventory_product" ("product_id");
+CREATE INDEX IF NOT EXISTS "order_customer_id_idx" ON "order" ("customer_id");
+CREATE INDEX IF NOT EXISTS "visit_salesperson_id_idx" ON "visit" ("salesperson_id");
+CREATE INDEX IF NOT EXISTS "visit_customer_id_idx" ON "visit" ("customer_id");
+
 -- Insert initial data for all tables
 
 -- -- Insert manufacturers
