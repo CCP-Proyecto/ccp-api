@@ -21,22 +21,6 @@ statementRouter.get("/", async (c) => {
   return c.json(statements);
 });
 
-statementRouter.get("/:id", async (c) => {
-  const selectedStatement = await db.query.statement.findFirst({
-    where: eq(statement.id, Number(c.req.param("id"))),
-    with: {
-      salesperson: true,
-      customer: true,
-    },
-  });
-
-  if (!selectedStatement) {
-    throw new HTTPException(404, { message: "Statement not found" });
-  }
-
-  return c.json(selectedStatement);
-});
-
 statementRouter.post("/", async (c) => {
   const body = await c.req.json();
   const parsedStatement = createStatementSchema(body);
@@ -127,6 +111,29 @@ statementRouter.patch("/:id", async (c) => {
   }
 
   return c.json(updated[0]);
+});
+
+statementRouter.get("/", async (c) => {
+  const salespersonId = c.req.query("salespersonId")?.trim();
+
+  if (salespersonId) {
+    const statements = await db.query.statement.findMany({
+      where: (fields, { eq }) => eq(fields.salespersonId, salespersonId),
+      with: {
+        salesperson: true,
+        customer: true,
+      },
+    });
+    return c.json(statements);
+  }
+
+  const statements = await db.query.statement.findMany({
+    with: {
+      salesperson: true,
+      customer: true,
+    },
+  });
+  return c.json(statements);
 });
 
 statementRouter.delete("/:id", async (c) => {
