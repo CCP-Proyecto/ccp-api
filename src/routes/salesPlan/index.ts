@@ -19,19 +19,23 @@ salesPlanRouter.get("/", async (c) => {
   return c.json(salesPlans);
 });
 
-salesPlanRouter.get("/:id", async (c) => {
-  const selectedSalesPlan = await db.query.salesPlan.findFirst({
-    where: eq(salesPlan.id, Number(c.req.param("id"))),
+salesPlanRouter.get("/", async (c) => {
+  const salespersonId = c.req.query("salespersonId");
+
+  if (!salespersonId) {
+    throw new HTTPException(400, {
+      message: "Missing required query param: salespersonId",
+    });
+  }
+
+  const salesPlans = await db.query.salesPlan.findMany({
+    where: eq(salesPlan.salespersonId, salespersonId),
     with: {
       salesperson: true,
     },
   });
 
-  if (!selectedSalesPlan) {
-    throw new HTTPException(404, { message: "SalesPlan not found" });
-  }
-
-  return c.json(selectedSalesPlan);
+  return c.json(salesPlans);
 });
 
 salesPlanRouter.post("/", async (c) => {
