@@ -1,5 +1,5 @@
 import { type } from "arktype";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 
@@ -71,83 +71,91 @@ inventoryRouter.post("/", async (c) => {
     });
   }
 
-  if (
-    !parsedInventory.inventories ||
-    parsedInventory.inventories.length === 0
-  ) {
+  if (!parsedInventory.inventories || parsedInventory.inventories.length === 0) {
     throw new HTTPException(400, { message: "Inventory data is required" });
   }
 
-  const firstInventory = parsedInventory.inventories[0];
-  if (!firstInventory) {
-    throw new HTTPException(400, { message: "Inventory data is invalid" });
-  }
-
-  const { warehouseId, productId, quantity } = firstInventory;
-
-  if (
-    warehouseId === undefined ||
-    productId === undefined ||
-    quantity === undefined
-  ) {
-    throw new HTTPException(400, {
-      message: "Warehouse ID, Product ID, and quantity are required",
-    });
-  }
-
-  const warehouseExists = await db.query.warehouse.findFirst({
-    where: eq(warehouse.id, warehouseId),
-  });
-  if (!warehouseExists) {
-    throw new HTTPException(400, { message: "Warehouse does not exist" });
-  }
-
-  const productExists = await db.query.product.findFirst({
-    where: eq(product.id, productId),
-  });
-  if (!productExists) {
-    throw new HTTPException(400, { message: "Product does not exist" });
-  }
-
-  const result = await db.transaction(async (tx) => {
-    const [createdInventory] = await tx
-      .insert(inventory)
-      .values({
-        quantity,
-        warehouseId,
-      })
-      .returning();
-
-    if (!createdInventory) {
-      throw new Error("Failed to create inventory record");
+  for (const inv of parsedInventory.inventories) {
+    if (
+      inv.warehouseId === undefined ||
+      inv.productId === undefined ||
+      inv.quantity === undefined
+    ) {
+      throw new HTTPException(400, {
+        message: "Warehouse ID, Product ID, and quantity are required for all inventory items",
+      });
     }
+  }
 
-    await tx.insert(inventoryProduct).values({
-      inventoryId: createdInventory.id,
-      productId,
-    });
+  const warehouseIds = [...new Set(parsedInventory.inventories.map(i => i.warehouseId))];
+  const warehouses = await db.query.warehouse.findMany({
+    where: inArray(warehouse.id, warehouseIds),
+  });
 
-    return await tx.query.inventory.findFirst({
-      where: eq(inventory.id, createdInventory.id),
-      with: {
-        warehouse: true,
-        products: {
-          with: {
-            product: true,
+  if (warehouses.length !== warehouseIds.length) {
+    throw new HTTPException(400, { message: "One or more warehouses do not exist" });
+  }
+
+  const productIds = [...new Set(parsedInventory.inventories.map(i => i.productId))];
+  const products = await db.query.product.findMany({
+    where: inArray(product.id, productIds),
+  });
+
+  if (products.length !== productIds.length) {
+    throw new HTTPException(400, { message: "One or more products do not exist" });
+  }
+
+  const results = await db.transaction(async (tx) => {
+    const createdInventories = [];
+
+    for (const inv of parsedInventory.inventories) {
+      const [createdInventory] = await tx
+        .insert(inventory)
+        .values({
+          quantity: inv.quantity,
+          warehouseId: inv.warehouseId,
+        })
+        .returning();
+
+      if (!createdInventory) {
+        throw new Error(`Failed to create inventory record for product ${inv.productId}`);
+      }
+
+      await tx.insert(inventoryProduct).values({
+        inventoryId: createdInventory.id,
+        productId: inv.productId,
+      });
+
+      const fullInventory = await tx.query.inventory.findFirst({
+        where: eq(inventory.id, createdInventory.id),
+        with: {
+          warehouse: true,
+          products: {
+            with: {
+              product: true,
+            },
           },
         },
-      },
-    });
+      });
+
+      if (!fullInventory) {
+        throw new Error(`Failed to retrieve created inventory for product ${inv.productId}`);
+      }
+
+      createdInventories.push(fullInventory);
+    }
+
+    return createdInventories;
   });
 
-  if (!result) {
-    throw new HTTPException(500, { message: "Failed to create inventory" });
+  if (!results || results.length === 0) {
+    throw new HTTPException(500, { message: "Failed to create inventories" });
   }
 
-  const response = {
+  const response = results.map(result => ({
     ...result,
     productIds: result.products.map((ip) => ip.product.id),
-  };
+  }));
 
   return c.json(response, 201);
 });
@@ -380,10 +388,10 @@ inventoryRouter.get("/product/:productId/warehouse/:warehouseId", async (c) => {
   }
 
   return c.json({
+    inventoryId: inventoryRecord.id,
+    quantity: inventoryRecord.quantity,
     product: firstProduct.product,
     warehouse: inventoryRecord.warehouse,
-    quantity: inventoryRecord.quantity,
-    inventoryId: inventoryRecord.id,
   });
 });
 
