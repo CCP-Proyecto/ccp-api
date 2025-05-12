@@ -1,4 +1,4 @@
-export enum ReportPeriodType {
+export enum PeriodType {
   MONTHLY = "monthly",
   QUARTERLY = "quarterly",
   SEMIANNUALLY = "semiannually",

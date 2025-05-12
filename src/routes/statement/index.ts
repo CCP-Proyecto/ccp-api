@@ -12,14 +12,25 @@ import { createStatementSchema, updateStatementSchema } from "./schema";
 const statementRouter = new Hono();
 
 statementRouter.get("/", async (c) => {
+  const salespersonId = c.req.query("salespersonId")?.trim();
+
+  if (!salespersonId) {
+    throw new HTTPException(400, {
+      message: "Missing required query param: salespersonId",
+    });
+  }
+
   const statements = await db.query.statement.findMany({
+    where: (fields, { eq }) => eq(fields.salespersonId, salespersonId), // Use camelCase as defined in your schema
     with: {
       salesperson: true,
       customer: true,
     },
   });
+
   return c.json(statements);
 });
+
 
 statementRouter.post("/", async (c) => {
   const body = await c.req.json();
@@ -113,25 +124,7 @@ statementRouter.patch("/:id", async (c) => {
   return c.json(updated[0]);
 });
 
-statementRouter.get("/", async (c) => {
-  const salespersonId = c.req.query("salespersonId")?.trim();
 
-  if (!salespersonId) {
-    throw new HTTPException(400, {
-      message: "Missing required query param: salespersonId",
-    });
-  }
-
-  const statements = await db.query.statement.findMany({
-    where: (fields, { eq }) => eq(fields.salespersonId, salespersonId),
-    with: {
-      salesperson: true,
-      customer: true,
-    },
-  });
-
-  return c.json(statements);
-});
 
 statementRouter.delete("/:id", async (c) => {
   const deleted = await db

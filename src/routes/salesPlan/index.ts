@@ -11,30 +11,23 @@ import { createSalesPlanSchema, updateSalesPlanSchema } from "./schema";
 const salesPlanRouter = new Hono();
 
 salesPlanRouter.get("/", async (c) => {
-  const salesPlans = await db.query.salesPlan.findMany({
-    with: {
-      salesperson: true,
-    },
-  });
-  return c.json(salesPlans);
-});
-
-salesPlanRouter.get("/", async (c) => {
   const salespersonId = c.req.query("salespersonId");
 
-  if (!salespersonId) {
-    throw new HTTPException(400, {
-      message: "Missing required query param: salespersonId",
+  if (salespersonId) {
+    const salesPlans = await db.query.salesPlan.findMany({
+      where: eq(salesPlan.salespersonId, salespersonId),
+      with: {
+        salesperson: true,
+      },
     });
+    return c.json(salesPlans);
   }
 
   const salesPlans = await db.query.salesPlan.findMany({
-    where: eq(salesPlan.salespersonId, salespersonId),
     with: {
       salesperson: true,
     },
   });
-
   return c.json(salesPlans);
 });
 
@@ -60,7 +53,7 @@ salesPlanRouter.post("/", async (c) => {
     .insert(salesPlan)
     .values({
       description: parsedSalesPlan.description,
-      Date: new Date(parsedSalesPlan.date),
+      period: parsedSalesPlan.period,
       salespersonId: parsedSalesPlan.salespersonId,
     })
     .returning();
@@ -84,8 +77,8 @@ salesPlanRouter.patch("/:id", async (c) => {
   if (parsedSalesPlan.description) {
     updateData.description = parsedSalesPlan.description;
   }
-  if (parsedSalesPlan.date) {
-    updateData.Date = new Date(parsedSalesPlan.date);
+  if (parsedSalesPlan.period) {
+    updateData.period = parsedSalesPlan.period;
   }
   if (parsedSalesPlan.salespersonId) {
     const salespersonExists = await db.query.salesperson.findFirst({
