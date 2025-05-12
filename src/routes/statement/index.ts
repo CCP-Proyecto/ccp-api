@@ -116,23 +116,20 @@ statementRouter.patch("/:id", async (c) => {
 statementRouter.get("/", async (c) => {
   const salespersonId = c.req.query("salespersonId")?.trim();
 
-  if (salespersonId) {
-    const statements = await db.query.statement.findMany({
-      where: (fields, { eq }) => eq(fields.salespersonId, salespersonId),
-      with: {
-        salesperson: true,
-        customer: true,
-      },
+  if (!salespersonId) {
+    throw new HTTPException(400, {
+      message: "Missing required query param: salespersonId",
     });
-    return c.json(statements);
   }
 
   const statements = await db.query.statement.findMany({
+    where: (fields, { eq }) => eq(fields.salespersonId, salespersonId),
     with: {
       salesperson: true,
       customer: true,
     },
   });
+
   return c.json(statements);
 });
 
