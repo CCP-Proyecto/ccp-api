@@ -57,7 +57,7 @@ reportRouter.post("/", async (c) => {
     throw new HTTPException(400, { message: "Salesperson does not exist" });
   }
 
-  const startDate = new Date(parsedReport.startDate);
+  const startDate = new Date(parsedReport.periodStart);
   let endDate: Date;
 
   switch (parsedReport.periodType) {

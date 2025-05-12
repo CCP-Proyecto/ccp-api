@@ -1,6 +1,8 @@
 import { relations } from "drizzle-orm";
 import { pgTable, serial, text, timestamp, varchar } from "drizzle-orm/pg-core";
 import { salesperson } from "./salesperson-schema";
+import { ReportPeriodType } from "@/constants";
+
 
 export const report = pgTable("report", {
   id: serial("id").primaryKey(),
@@ -9,7 +11,13 @@ export const report = pgTable("report", {
   salespersonId: text("salesperson_id")
     .notNull()
     .references(() => salesperson.id),
-  periodType: varchar("period_type", { length: 20 }),
+  periodType: text("period_type", {
+      enum: [
+        ReportPeriodType.MONTHLY,
+        ReportPeriodType.QUARTERLY,
+        ReportPeriodType.SEMIANNUALLY,
+      ],
+    }).notNull(),
   periodStart: timestamp("period_start"),
   periodEnd: timestamp("period_end"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
