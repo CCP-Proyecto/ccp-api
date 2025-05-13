@@ -2,7 +2,7 @@ import { type } from "arktype";
 import { and, eq, gte, lt } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { addMonths, addQuarters } from "date-fns";
+import { addMonths, addQuarters, addYears } from "date-fns";
 
 import { db } from "@/db";
 import { order } from "@/db/schema/order-schema";
@@ -22,7 +22,7 @@ reportRouter.get("/", async (c) => {
 
   if (!Object.values(PeriodType).includes(periodType as PeriodType)) {
     throw new HTTPException(400, {
-      message: "Invalid periodType. Must be one of: monthly, quarterly, semiannually"
+      message: "Invalid periodType. Must be one of: monthly, quarterly, annually"
     });
   }
 
@@ -45,8 +45,8 @@ reportRouter.get("/", async (c) => {
     case PeriodType.QUARTERLY:
       endDate = addQuarters(startDate, 1);
       break;
-    case PeriodType.SEMIANNUALLY:
-      endDate = addMonths(startDate, 6);
+    case PeriodType.ANNUALLY:
+      endDate = addYears(startDate, 1);
       break;
     default:
       throw new HTTPException(400, { message: "Invalid period type" });
