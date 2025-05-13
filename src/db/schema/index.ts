@@ -8,6 +8,5 @@ export * from "./visit-schema";
 export * from "./inventory-schema";
 export * from "./warehouse-schema";
 export * from "./delivery-schema";
-export * from "./report-schema";
 export * from "./statement-schema";
 export * from "./salesPlan-schema";

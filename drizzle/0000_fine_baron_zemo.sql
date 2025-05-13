@@ -339,38 +339,6 @@ BEGIN
     END IF;
 END $$;
 
--- Create report table if it doesn't exist with all the new columns
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'report') THEN
-        CREATE TABLE "report" (
-            "id" serial PRIMARY KEY NOT NULL,
-            "description" text NOT NULL,
-            "date" timestamp NOT NULL,
-            "salesperson_id" text NOT NULL,
-            "period_type" text NOT NULL,
-            "period_start" timestamp,
-            "period_end" timestamp,
-            "created_at" timestamp NOT NULL DEFAULT now(),
-            "updated_at" timestamp NOT NULL DEFAULT now(),
-            CONSTRAINT "report_period_type_check" CHECK (
-                "period_type" IN ('monthly', 'quarterly', 'semiannually')
-            ),
-            -- Foreign key constraint
-            CONSTRAINT "report_salesperson_id_fk"
-            FOREIGN KEY ("salesperson_id")
-            REFERENCES "salesperson"("id")
-            ON DELETE CASCADE
-            ON UPDATE NO ACTION
-        );
-        -- Create index for better query performance on salesperson_id
-        CREATE INDEX IF NOT EXISTS "report_salesperson_id_idx" ON "report" ("salesperson_id");
-
-        -- Create index for period queries
-        CREATE INDEX IF NOT EXISTS "report_period_start_end_idx" ON "report" ("period_start", "period_end");
-    END IF;
-END $$;
-
 -- Create statement table if it doesn't exist
 DO $$
 BEGIN
@@ -401,7 +369,7 @@ BEGIN
             "salesperson_id" text NOT NULL REFERENCES "salesperson"("id"),
             "created_at" timestamp NOT NULL DEFAULT now(),
             "updated_at" timestamp NOT NULL DEFAULT now(),
-            CONSTRAINT "report_period_check" CHECK (
+            CONSTRAINT "salesplan_period_check" CHECK (
                 "period" IN ('monthly', 'quarterly', 'semiannually')
             )
         );
@@ -518,21 +486,6 @@ BEGIN
     END IF;
 END $$;
 
--- Add foreign key constraint for report -> salesperson
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint WHERE conname = 'report_salesperson_id_salesperson_id_fk'
-    ) THEN
-        ALTER TABLE "report"
-        ADD CONSTRAINT "report_salesperson_id_salesperson_id_fk"
-        FOREIGN KEY ("salesperson_id")
-        REFERENCES "public"."salesperson"("id")
-        ON DELETE cascade
-        ON UPDATE no action;
-    END IF;
-END $$;
-
 -- Add foreign key constraint for statement -> salesperson
 DO $$
 BEGIN
@@ -577,5 +530,3 @@ BEGIN
         ON UPDATE NO ACTION;
     END IF;
 END $$;
-
--- Insert initial data for all tables
