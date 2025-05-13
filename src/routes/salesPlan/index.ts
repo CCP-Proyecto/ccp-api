@@ -52,6 +52,7 @@ salesPlanRouter.post("/", async (c) => {
   const created = await db
     .insert(salesPlan)
     .values({
+      name: parsedSalesPlan.name,
       description: parsedSalesPlan.description,
       period: parsedSalesPlan.period,
       salespersonId: parsedSalesPlan.salespersonId,
@@ -74,6 +75,9 @@ salesPlanRouter.patch("/:id", async (c) => {
 
   const updateData: Partial<typeof salesPlan.$inferInsert> = {};
 
+  if (parsedSalesPlan.name) {
+    updateData.name = parsedSalesPlan.name;
+  }
   if (parsedSalesPlan.description) {
     updateData.description = parsedSalesPlan.description;
   }

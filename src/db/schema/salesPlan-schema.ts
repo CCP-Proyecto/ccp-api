@@ -5,12 +5,13 @@ import { PeriodType } from "@/constants";
 
 export const salesPlan = pgTable("salesPlan", {
   id: serial("id").primaryKey(),
+  name: text("name").notNull(),
   description: text("description").notNull(),
   period: text("period", {
       enum: [
         PeriodType.MONTHLY,
         PeriodType.QUARTERLY,
-        PeriodType.SEMIANNUALLY,
+        PeriodType.ANNUALLY,
       ],
     }).notNull(),
   salespersonId: text("salesperson_id")
