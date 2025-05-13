@@ -14,21 +14,26 @@ const statementRouter = new Hono();
 statementRouter.get("/", async (c) => {
   const salespersonId = c.req.query("salespersonId")?.trim();
 
-  if (!salespersonId) {
-    throw new HTTPException(400, {
-      message: "Missing required query param: salespersonId",
+  if (salespersonId) {
+    // Filter by salespersonId if provided
+    const statements = await db.query.statement.findMany({
+      where: (fields, { eq }) => eq(fields.salespersonId, salespersonId),
+      with: {
+        salesperson: true,
+        customer: true,
+      },
     });
+    return c.json(statements);
+  } else {
+    // Return all statements if no salespersonId is provided
+    const allStatements = await db.query.statement.findMany({
+      with: {
+        salesperson: true,
+        customer: true,
+      },
+    });
+    return c.json(allStatements);
   }
-
-  const statements = await db.query.statement.findMany({
-    where: (fields, { eq }) => eq(fields.salespersonId, salespersonId), // Use camelCase as defined in your schema
-    with: {
-      salesperson: true,
-      customer: true,
-    },
-  });
-
-  return c.json(statements);
 });
 
 

@@ -36,7 +36,7 @@ app.route("/api/visit", visit);
 app.route("/api/delivery", delivery);
 app.route("/api/report", report);
 app.route("/api/statement", statement);
-app.route("/api/salesPlan", salesPlan);
+app.route("/api/salesplan", salesPlan);
 
 app.onError((error, c) => {
   if (!(error instanceof HTTPException)) {
