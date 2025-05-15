@@ -546,29 +546,24 @@ INSERT INTO "product" ("id", "name", "description", "price", "storage_condition"
 (2, 'Queso campesino', 'Por kilo', 8000.00, 'Refrigerar en nevera', '1100000000', '2025-05-02 18:23:47.167406', '2025-05-02 18:23:47.167406'),
 (3, 'Arroz', 'Por libra', 300.00, 'No aplica', '1100000000', '2025-05-02 18:23:47.167406', '2025-05-02 18:23:47.167406');
 
--- Insert users
-INSERT INTO "user" ("id", "user_id", "name", "email", "email_verified", "image", "created_at", "updated_at", "roles") VALUES
-(1, '1016113926', 'Admin Principal', 'testadmin2@test.com', false, NULL, '2025-05-02 18:23:47.167406', '2025-05-02 18:23:47.167406', '{admin}'),
-(2, '1234567890', 'Vendedor Ejemplo', 'testvendedor@test.com', false, NULL, '2025-05-02 18:23:47.167406', '2025-05-02 18:23:47.167406', '{sales}'),
-(3, '9001234567', 'Cliente Ejemplo', 'testcliente@test.com', false, NULL, '2025-05-02 18:23:47.167406', '2025-05-02 18:23:47.167406', '{customer}');
-
--- Insert accounts
-INSERT INTO "account" ("id", "account_id", "provider_id", "user_id", "access_token", "refresh_token", "id_token", "access_token_expires_at", "refresh_token_expires_at", "scope", "password", "created_at", "updated_at") VALUES
-(1, 'acc_admin', 'email', 1, NULL, NULL, NULL, NULL, NULL, NULL, '$2a$10$xJwL5v5Jz5UZJz5UZJz5Ue', '2025-05-02 18:23:47.167406', '2025-05-02 18:23:47.167406'),
-(2, 'acc_vendedor', 'email', 2, NULL, NULL, NULL, NULL, NULL, NULL, '$2a$10$xJwL5v5Jz5UZJz5UZJz5Ue', '2025-05-02 18:23:47.167406', '2025-05-02 18:23:47.167406'),
-(3, 'acc_cliente', 'email', 3, NULL, NULL, NULL, NULL, NULL, NULL, '$2a$10$xJwL5v5Jz5UZJz5UZJz5Ue', '2025-05-02 18:23:47.167406', '2025-05-02 18:23:47.167406');
+-- Reset the products sequence to continue from the highest existing ID
+DO $$
+BEGIN
+    PERFORM setval(
+        pg_get_serial_sequence('product', 'id'),
+        COALESCE((SELECT MAX(id) FROM product), 0) + 1,
+        false
+    );
+END $$;
 
 -- Insert salespersons
 INSERT INTO "salesperson" ("id", "id_type", "name", "email", "phone", "created_at", "updated_at") VALUES
 ('1234567890', 'CC', 'Carlos Pérez', 'carlos@empresa.com', '3001112233', NOW(), NOW());
--- ('9876543210', 'CC', 'María Gómez', 'maria@empresa.com', '3002223344', NOW(), NOW()),
--- ('4567891230', 'CC', 'Juan Rodríguez', 'juan@empresa.com', '3003334455', NOW(), NOW());
+
 
 -- Insert customers
 INSERT INTO "customer" ("id", "id_type", "name", "address", "phone", "salesperson_id", "created_at", "updated_at") VALUES
 ('9001234567', 'NIT', 'Supermercado La Economía', 'Calle 10 #20-30, Bogotá', '6012345678', '1234567890', NOW(), NOW());
--- ('9007654321', 'NIT', 'Tienda El Ahorro', 'Carrera 50 #80-10, Medellín', '6045678901', '9876543210', NOW(), NOW()),
--- ('9005678912', 'NIT', 'Mercado Campesino', 'Avenida 6N #20-45, Cali', '6023456789', '4567891230', NOW(), NOW());
 
 -- Insert warehouses
 INSERT INTO "warehouse" ("id", "location", "created_at", "updated_at") VALUES
@@ -576,38 +571,34 @@ INSERT INTO "warehouse" ("id", "location", "created_at", "updated_at") VALUES
 (2, 'Centro de Distribución Occidente', NOW(), NOW()),
 (3, 'Bodega Sur, Cali', NOW(), NOW());
 
--- Insert inventory
+-- Reset the warehouses sequence to continue from the highest existing ID
+DO $$
+BEGIN
+    PERFORM setval(
+        pg_get_serial_sequence('warehouse', 'id'),
+        COALESCE((SELECT MAX(id) FROM warehouse), 0) + 1,
+        false
+    );
+END $$;
+
+-- Insert inventories
 INSERT INTO "inventory" ("id", "quantity", "warehouse_id", "created_at", "updated_at") VALUES
 (1, 500, 1, NOW(), NOW()),
 (2, 200, 2, NOW(), NOW()),
 (3, 1000, 3, NOW(), NOW());
+
+-- Reset the inventories sequence to continue from the highest existing ID
+DO $$
+BEGIN
+    PERFORM setval(
+        pg_get_serial_sequence('inventory', 'id'),
+        COALESCE((SELECT MAX(id) FROM inventory), 0) + 1,
+        false
+    );
+END $$;
 
 -- Insert inventory_product relationships
 INSERT INTO "inventory_product" ("inventory_id", "product_id") VALUES
 (1, 1),
 (2, 2),
 (3, 3);
-
--- Insert orders
-INSERT INTO "order" ("id", "status", "total", "customer_id", "salesperson_id", "created_at", "updated_at") VALUES
-(1, 'pending', 10000.00, '9001234567', '1234567890', NOW(), NOW()),
-(2, 'sent', 16000.00, '9001234567', '1234567890', NOW(), NOW()),
-(3, 'delivered', 3000.00, '9001234567', '1234567890', NOW(), NOW());
-
--- Insert order_product relationships
-INSERT INTO "order_product" ("order_id", "product_id", "quantity", "price_at_order") VALUES
-(1, 1, 10, 1000.00),
-(2, 2, 2, 8000.00),
-(3, 3, 10, 300.00);
-
--- Insert deliveries
-INSERT INTO "delivery" ("id", "estimated_delivery_date", "actual_delivery_date", "status", "tracking_number", "notes", "address", "order_id", "created_at", "updated_at") VALUES
-(1, NOW() + INTERVAL '2 days', NULL, 'pending', 'CO123456789', 'Entregar antes de las 2pm', 'Calle 10 #20-30, Bogotá', 1, NOW(), NOW()),
-(2, NOW() + INTERVAL '1 day', NULL, 'pending', 'CO987654321', 'Requerida firma', 'Carrera 50 #80-10, Medellín', 2, NOW(), NOW()),
-(3, NOW(), NOW(), 'pending', 'CO567891234', 'Entregado a recepción', 'Avenida 6N #20-45, Cali', 3, NOW(), NOW());
-
--- Insert visits
-INSERT INTO "visit" ("id", "salesperson_id", "customer_id", "visit_date", "comments", "created_at", "updated_at") VALUES
-(1, '1234567890', '9001234567', NOW() - INTERVAL '3 days', 'Presentación nuevos productos', NOW(), NOW()),
-(2, '1234567890', '9001234567', NOW() - INTERVAL '1 day', 'Seguimiento pedido pendiente', NOW(), NOW()),
-(3, '1234567890', '9001234567', NOW() - INTERVAL '1 week', 'Visita inicial a nuevo cliente', NOW(), NOW());
