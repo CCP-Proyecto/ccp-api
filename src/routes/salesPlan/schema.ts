@@ -8,9 +8,4 @@ export const createSalesPlanSchema = type({
   salespersonId: "string",
 });
 
-export const updateSalesPlanSchema = type({
-  "name?": "string",
-  "description?": "string",
-  "period?": type.valueOf(PeriodType),
-  "salespersonId?": "string",
-});
+export const updateSalesPlanSchema = createSalesPlanSchema.partial();

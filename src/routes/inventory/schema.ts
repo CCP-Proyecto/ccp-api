@@ -13,6 +13,8 @@ export const createInventorySchema = type({
   inventories: inventorySchema.array(),
 });
 
+export const updateInventorySchema = inventorySchema.partial();
+
 export const inventoryProduct = pgTable("inventory_product", {
   inventoryId: integer("inventory_id")
     .notNull()
@@ -21,5 +23,3 @@ export const inventoryProduct = pgTable("inventory_product", {
     .notNull()
     .references(() => product.id, { onDelete: "cascade" }),
 });
-
-export const updateInventorySchema = inventorySchema.partial();

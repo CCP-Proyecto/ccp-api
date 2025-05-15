@@ -7,9 +7,4 @@ export const createStatementSchema = type({
   customerId: "string",
 });
 
-export const updateStatementSchema = type({
-  "description?": "string",
-  "date?": "string",
-  "salespersonId?": "string",
-  "customerId?": "string",
-});
+export const updateStatementSchema = createStatementSchema.partial();

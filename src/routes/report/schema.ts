@@ -8,11 +8,4 @@ export const createReportSchema = type({
   salespersonId: "string",
 });
 
-export const updateReportSchema = type({
-  "description?": "string",
-  "date?": "string",
-  "periodType?": type.valueOf(PeriodType),
-  "periodStart?": "string",
-  "periodEnd?": "string",
-  "salespersonId?": "string",
-});
+export const updateReportSchema = createReportSchema.partial();

@@ -9,10 +9,4 @@ export const createDeliverySchema = type({
   address: "string",
 });
 
-export const updateDeliverySchema = type({
-  "status?": type.valueOf(DeliveryStatus),
-  "actualDeliveryDate?": "string",
-  "trackingNumber?": "string",
-  "notes?": "string",
-  "address?": "string",
-});
+export const updateDeliverySchema = createDeliverySchema.partial()
