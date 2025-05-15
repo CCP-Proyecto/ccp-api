@@ -1,5 +1,5 @@
 import { type } from "arktype";
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, exists, inArray } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 
@@ -7,6 +7,7 @@ import { db } from "@/db";
 import { customer } from "@/db/schema/customer-schema";
 import { order, orderProduct } from "@/db/schema/order-schema";
 import { product } from "@/db/schema/product-schema";
+import { inventory, inventoryProduct } from "@/db/schema/inventory-schema";
 import { salesperson } from "@/db/schema/salesperson-schema";
 import { createOrderSchema, updateOrderSchema } from "./schema";
 
@@ -86,6 +87,55 @@ orderRouter.post("/", async (c) => {
     throw new HTTPException(400, { message: "One or more products not found" });
   }
 
+  const inventoryUpdates: {
+    productId: number;
+    quantityToDeduct: number;
+    inventoryEntries: {
+      id: number;
+      currentQuantity: number;
+    }[];
+  }[] = [];
+
+  for (const item of parsedOrder.products) {
+    const inventoryEntries = await db.query.inventory.findMany({
+      where: (inventory) => {
+        return exists(
+          db
+            .select()
+            .from(inventoryProduct)
+            .where(
+              and(
+                eq(inventoryProduct.productId, item.productId),
+                eq(inventoryProduct.inventoryId, inventory.id)
+              )
+            )
+        );
+      },
+      orderBy: (inventory, { desc }) => [desc(inventory.quantity)],
+    });
+
+    const totalQuantity = inventoryEntries.reduce((sum, entry) => {
+      return sum + entry.quantity;
+    }, 0);
+
+    if (totalQuantity < item.quantity) {
+      const product = products.find(p => p.id === item.productId);
+      throw new HTTPException(400, {
+        message: `Not enough inventory for product ${product?.name || item.productId}. ` +
+                `Requested: ${item.quantity}, Available: ${totalQuantity}`
+      });
+    }
+
+    inventoryUpdates.push({
+      productId: item.productId,
+      quantityToDeduct: item.quantity,
+      inventoryEntries: inventoryEntries.map(entry => ({
+        id: entry.id,
+        currentQuantity: entry.quantity
+      }))
+    });
+  }
+
   const total = parsedOrder.products.reduce((sum, item) => {
     const product = products.find((p) => p.id === item.productId);
     return sum + (product?.price || 0) * item.quantity;
@@ -117,6 +167,26 @@ orderRouter.post("/", async (c) => {
           0,
       })),
     );
+
+    for (const update of inventoryUpdates) {
+      let remainingToDeduct = update.quantityToDeduct;
+
+      for (const inventoryEntry of update.inventoryEntries) {
+        if (remainingToDeduct <= 0) break;
+
+        const deduction = Math.min(remainingToDeduct, inventoryEntry.currentQuantity);
+
+        await tx.update(inventory)
+          .set({ quantity: inventoryEntry.currentQuantity - deduction })
+          .where(eq(inventory.id, inventoryEntry.id));
+
+        remainingToDeduct -= deduction;
+      }
+
+      if (remainingToDeduct > 0) {
+        throw new Error(`Failed to deduct all quantity for product ${update.productId}`);
+      }
+    }
 
     return createdOrder;
   });
