@@ -252,6 +252,7 @@ BEGIN
     IF NOT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'warehouse') THEN
         CREATE TABLE "warehouse" (
             "id" serial PRIMARY KEY NOT NULL,
+            "name" text NOT NULL,
             "location" text NOT NULL,
             "created_at" timestamp DEFAULT now() NOT NULL,
             "updated_at" timestamp DEFAULT now() NOT NULL
@@ -566,10 +567,10 @@ INSERT INTO "customer" ("id", "id_type", "name", "address", "phone", "salesperso
 ('9001234567', 'NIT', 'Supermercado La Economía', 'Calle 10 #20-30, Bogotá', '6012345678', '1234567890', NOW(), NOW());
 
 -- Insert warehouses
-INSERT INTO "warehouse" ("id", "location", "created_at", "updated_at") VALUES
-(1, 'Bodega Norte, Bogotá', NOW(), NOW()),
-(2, 'Centro de Distribución Occidente', NOW(), NOW()),
-(3, 'Bodega Sur, Cali', NOW(), NOW());
+INSERT INTO "warehouse" ("id", "name","location", "created_at", "updated_at") VALUES
+(1,'Bodega Norte, Bogotá', 'calle 23 sur # 45-67',NOW(), NOW()),
+(2,'Centro de Distribución Occidente', 'calle 25a # 45-67',NOW(), NOW()),
+(3,'Bodega Sur, Cali','calle 45f # 45-67', NOW(), NOW());
 
 -- Reset the warehouses sequence to continue from the highest existing ID
 DO $$
