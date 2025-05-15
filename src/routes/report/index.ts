@@ -1,13 +1,13 @@
 import { type } from "arktype";
+import { addMonths, addQuarters, addYears } from "date-fns";
 import { and, eq, gte, lt } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { addMonths, addQuarters, addYears } from "date-fns";
 
+import { PeriodType } from "@/constants";
 import { db } from "@/db";
 import { order } from "@/db/schema/order-schema";
 import { salesperson } from "@/db/schema/salesperson-schema";
-import { PeriodType } from "@/constants";
 
 const reportRouter = new Hono();
 
@@ -16,13 +16,15 @@ reportRouter.get("/", async (c) => {
 
   if (!salespersonId || !periodType || !periodStart) {
     throw new HTTPException(400, {
-      message: "Missing required query parameters: salespersonId, periodType, periodStart"
+      message:
+        "Missing required query parameters: salespersonId, periodType, periodStart",
     });
   }
 
   if (!Object.values(PeriodType).includes(periodType as PeriodType)) {
     throw new HTTPException(400, {
-      message: "Invalid periodType. Must be one of: monthly, quarterly, annually"
+      message:
+        "Invalid periodType. Must be one of: monthly, quarterly, annually",
     });
   }
 

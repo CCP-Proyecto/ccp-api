@@ -47,6 +47,7 @@ customerRouter.post("/", async (c) => {
   if (exists) {
     throw new HTTPException(400, {
       message: "Customer already exists",
+      cause: `Customer with ID ${parsed.id} already exists`,
     });
   }
 
@@ -59,14 +60,14 @@ customerRouter.post("/", async (c) => {
 
     if (!salespersonExists) {
       throw new HTTPException(400, {
-        message: "Invalid request body",
-        cause: "Salesperson does not exist",
+        message: "Invalid request body - Salesperson does not exist",
+        cause: `Salesperson with ID '${salespersonId}' not found`,
       });
     }
   }
 
   const created = await db.insert(customer).values(parsed).returning();
-  return c.json(created[0]);
+  return c.json(created[0], 201);
 });
 
 customerRouter.put("/:id", async (c) => {
@@ -82,11 +83,29 @@ customerRouter.put("/:id", async (c) => {
 
   const { salespersonId, ...updateData } = parsed;
 
+  if (salespersonId !== undefined && Object.keys(updateData).length === 0) {
+    throw new HTTPException(400, {
+      message: "Forbidden salespersonId update",
+    });
+  }
+
+  if (salespersonId) {
+    const salesperson = await db.query.salesperson.findFirst({
+      where: (sp, { eq }) => eq(sp.id, salespersonId),
+    });
+
+    if (!salesperson) {
+      throw new HTTPException(400, {
+        message: `Salesperson with ID ${salespersonId} not found`,
+      });
+    }
+  }
+
   const updated = await db
     .update(customer)
     .set({
       ...updateData,
-      salespersonId,
+      ...(salespersonId !== undefined ? { salespersonId } : {}),
       updatedAt: new Date(),
     })
     .where(eq(customer.id, c.req.param("id")))
@@ -102,7 +121,29 @@ customerRouter.put("/:id", async (c) => {
 });
 
 customerRouter.patch("/:id/salesperson", async (c) => {
-  const { salespersonId } = await c.req.json();
+  // Define type for expected request body
+  interface RequestBody {
+    salespersonId?: string;
+  }
+
+  // Initialize with type annotation
+  let body: RequestBody;
+
+  try {
+    body = await c.req.json<RequestBody>();
+  } catch (error) {
+    throw new HTTPException(400, {
+      message: "Invalid JSON body",
+    });
+  }
+
+  if (!body || typeof body !== "object") {
+    throw new HTTPException(400, {
+      message: "Request body must be a JSON object",
+    });
+  }
+
+  const { salespersonId } = body;
 
   if (!salespersonId) {
     throw new HTTPException(400, {

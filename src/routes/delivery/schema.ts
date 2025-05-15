@@ -9,4 +9,4 @@ export const createDeliverySchema = type({
   address: "string",
 });
 
-export const updateDeliverySchema = createDeliverySchema.partial()
+export const updateDeliverySchema = createDeliverySchema.partial();

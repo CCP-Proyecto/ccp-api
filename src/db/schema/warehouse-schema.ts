@@ -4,7 +4,7 @@ import { inventory } from "./inventory-schema";
 
 export const warehouse = pgTable("warehouse", {
   id: serial("id").primaryKey(),
-  name:text("name").notNull(),
+  name: text("name").notNull(),
   address: text("location").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

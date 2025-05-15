@@ -24,18 +24,8 @@ statementRouter.get("/", async (c) => {
       },
     });
     return c.json(statements);
-  } else {
-    // Return all statements if no salespersonId is provided
-    const allStatements = await db.query.statement.findMany({
-      with: {
-        salesperson: true,
-        customer: true,
-      },
-    });
-    return c.json(allStatements);
   }
 });
-
 
 statementRouter.post("/", async (c) => {
   const body = await c.req.json();
@@ -128,8 +118,6 @@ statementRouter.patch("/:id", async (c) => {
 
   return c.json(updated[0]);
 });
-
-
 
 statementRouter.delete("/:id", async (c) => {
   const deleted = await db

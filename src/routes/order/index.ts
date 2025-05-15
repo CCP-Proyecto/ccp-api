@@ -5,9 +5,9 @@ import { HTTPException } from "hono/http-exception";
 
 import { db } from "@/db";
 import { customer } from "@/db/schema/customer-schema";
+import { inventory, inventoryProduct } from "@/db/schema/inventory-schema";
 import { order, orderProduct } from "@/db/schema/order-schema";
 import { product } from "@/db/schema/product-schema";
-import { inventory, inventoryProduct } from "@/db/schema/inventory-schema";
 import { salesperson } from "@/db/schema/salesperson-schema";
 import { createOrderSchema, updateOrderSchema } from "./schema";
 
@@ -106,9 +106,9 @@ orderRouter.post("/", async (c) => {
             .where(
               and(
                 eq(inventoryProduct.productId, item.productId),
-                eq(inventoryProduct.inventoryId, inventory.id)
-              )
-            )
+                eq(inventoryProduct.inventoryId, inventory.id),
+              ),
+            ),
         );
       },
       orderBy: (inventory, { desc }) => [desc(inventory.quantity)],
@@ -119,20 +119,21 @@ orderRouter.post("/", async (c) => {
     }, 0);
 
     if (totalQuantity < item.quantity) {
-      const product = products.find(p => p.id === item.productId);
+      const product = products.find((p) => p.id === item.productId);
       throw new HTTPException(400, {
-        message: `Not enough inventory for product ${product?.name || item.productId}. ` +
-                `Requested: ${item.quantity}, Available: ${totalQuantity}`
+        message:
+          `Not enough inventory for product ${product?.name || item.productId}. ` +
+          `Requested: ${item.quantity}, Available: ${totalQuantity}`,
       });
     }
 
     inventoryUpdates.push({
       productId: item.productId,
       quantityToDeduct: item.quantity,
-      inventoryEntries: inventoryEntries.map(entry => ({
+      inventoryEntries: inventoryEntries.map((entry) => ({
         id: entry.id,
-        currentQuantity: entry.quantity
-      }))
+        currentQuantity: entry.quantity,
+      })),
     });
   }
 
@@ -174,9 +175,13 @@ orderRouter.post("/", async (c) => {
       for (const inventoryEntry of update.inventoryEntries) {
         if (remainingToDeduct <= 0) break;
 
-        const deduction = Math.min(remainingToDeduct, inventoryEntry.currentQuantity);
+        const deduction = Math.min(
+          remainingToDeduct,
+          inventoryEntry.currentQuantity,
+        );
 
-        await tx.update(inventory)
+        await tx
+          .update(inventory)
           .set({ quantity: inventoryEntry.currentQuantity - deduction })
           .where(eq(inventory.id, inventoryEntry.id));
 
@@ -184,7 +189,9 @@ orderRouter.post("/", async (c) => {
       }
 
       if (remainingToDeduct > 0) {
-        throw new Error(`Failed to deduct all quantity for product ${update.productId}`);
+        throw new Error(
+          `Failed to deduct all quantity for product ${update.productId}`,
+        );
       }
     }
 
