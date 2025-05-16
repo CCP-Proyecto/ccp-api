@@ -293,14 +293,23 @@ inventoryRouter.get("/product/:productId/warehouses", async (c) => {
     return c.json([]);
   }
 
-  const warehouses = inventoryProducts.map((ip) => ({
-    ...ip.inventory.warehouse,
-    quantity: ip.inventory.quantity,
-    inventoryId: ip.inventory.id,
-  }));
+  const warehouseMap = new Map();
+  for (const ip of inventoryProducts) {
+    const w = ip.inventory.warehouse;
+    if (!warehouseMap.has(w.id)) {
+      warehouseMap.set(w.id, {
+        ...w,
+        quantity: 0,
+      });
+    }
+    warehouseMap.get(w.id).quantity += ip.inventory.quantity;
+  }
+
+  const warehouses = Array.from(warehouseMap.values());
 
   return c.json(warehouses);
 });
+
 
 inventoryRouter.get("/product/:productId/total-quantity", async (c) => {
   const productId = Number(c.req.param("productId"));
