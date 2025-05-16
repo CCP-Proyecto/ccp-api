@@ -121,12 +121,10 @@ customerRouter.put("/:id", async (c) => {
 });
 
 customerRouter.patch("/:id/salesperson", async (c) => {
-  // Define type for expected request body
   interface RequestBody {
     salespersonId?: string;
   }
 
-  // Initialize with type annotation
   let body: RequestBody;
 
   try {

@@ -15,7 +15,6 @@ statementRouter.get("/", async (c) => {
   const salespersonId = c.req.query("salespersonId")?.trim();
 
   if (salespersonId) {
-    // Filter by salespersonId if provided
     const statements = await db.query.statement.findMany({
       where: (fields, { eq }) => eq(fields.salespersonId, salespersonId),
       with: {

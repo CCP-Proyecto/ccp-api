@@ -56,7 +56,7 @@ manufacturerRouter.post("/", async (c) => {
     .values(parsedManufacturer)
     .returning();
 
-  return c.json(createdManufacturer[0]);
+  return c.json(createdManufacturer[0], 201);
 });
 
 manufacturerRouter.put("/:id", async (c) => {
