@@ -53,7 +53,7 @@ productRouter.post("/", async (c) => {
 
   if (!manufacturerId) {
     throw new HTTPException(400, {
-      message: "Invalid request body",
+      message: "Manufacturer id is required", // Changed from "Invalid request body"
       cause: "Manufacturer id is required",
     });
   }
@@ -64,7 +64,7 @@ productRouter.post("/", async (c) => {
 
   if (!manufacturerExists) {
     throw new HTTPException(400, {
-      message: "Invalid request body",
+      message: "Manufacturer does not exist", // Changed from "Invalid request body"
       cause: "Manufacturer does not exist",
     });
   }
@@ -91,7 +91,7 @@ productRouter.put("/:id", async (c) => {
 
   if (!parsedProduct.manufacturerId) {
     throw new HTTPException(400, {
-      message: "Invalid request body",
+      message: "Manufacturer id is required", // Changed from "Invalid request body"
       cause: "Manufacturer id is required",
     });
   }
@@ -102,7 +102,7 @@ productRouter.put("/:id", async (c) => {
 
   if (!manufacturerExists) {
     throw new HTTPException(400, {
-      message: "Invalid request body",
+      message: "Manufacturer does not exist", // Changed from "Invalid request body"
       cause: "Manufacturer does not exist",
     });
   }
@@ -123,6 +123,19 @@ productRouter.put("/:id", async (c) => {
   }
 
   return c.json(updatedProduct[0]);
+});
+
+productRouter.get("/manufacturer/:manufacturerId", async (c) => {
+  const manufacturerId = Number(c.req.param("manufacturerId"));
+
+  const products = await db.query.product.findMany({
+    where: eq(product.manufacturerId, manufacturerId),
+    with: {
+      manufacturer: true,
+    },
+  });
+
+  return c.json(products);
 });
 
 productRouter.delete("/:id", async (c) => {
