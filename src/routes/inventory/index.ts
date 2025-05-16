@@ -392,9 +392,6 @@ inventoryRouter.get("/product/:productId/warehouse/:warehouseId", async (c) => {
     return c.json(
       {
         message: "Product not found in specified warehouse",
-        product: productExists,
-        warehouse: warehouseExists,
-        quantity: 0,
       },
       404,
     );
