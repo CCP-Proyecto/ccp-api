@@ -40,19 +40,21 @@ mock.module("@/db", () => ({
         returning: mock(() => []),
       })),
     })),
-    transaction: mock(async (fn) => fn({
-      insert: (...args: any[]) => ({
-        values: () => ({
-          returning: () => [{ id: 1, customerId: 1, total: 100 }],
+    transaction: mock(async (fn) =>
+      fn({
+        insert: (...args: any[]) => ({
+          values: () => ({
+            returning: () => [{ id: 1, customerId: 1, total: 100 }],
+          }),
+        }),
+        insertMany: (...args: any[]) => ({}),
+        update: (...args: any[]) => ({
+          set: () => ({
+            where: () => ({}),
+          }),
         }),
       }),
-      insertMany: (...args: any[]) => ({}),
-      update: (...args: any[]) => ({
-        set: () => ({
-          where: () => ({}),
-        }),
-      }),
-    })),
+    ),
     select: mock(() => ({
       from: mock(() => []),
     })),
@@ -71,7 +73,9 @@ describe("Order API", () => {
     // Reset all mocks
     Object.values(mockDb.query.order).forEach((fn: any) => fn.mockReset());
     Object.values(mockDb.query.customer).forEach((fn: any) => fn.mockReset());
-    Object.values(mockDb.query.salesperson).forEach((fn: any) => fn.mockReset());
+    Object.values(mockDb.query.salesperson).forEach((fn: any) =>
+      fn.mockReset(),
+    );
     Object.values(mockDb.query.product).forEach((fn: any) => fn.mockReset());
     Object.values(mockDb.query.inventory).forEach((fn: any) => fn.mockReset());
     mockDb.insert.mockReset();
@@ -118,31 +122,37 @@ describe("Order API", () => {
     test("should create a new order with valid data", async () => {
       const newOrder = {
         customerId: "1", // Should be string per schema
-        products: [{ productId: 1, quantity: 2 }]
+        products: [{ productId: 1, quantity: 2 }],
       };
 
       // Mock all required database calls
       mockDb.query.customer.findFirst.mockResolvedValueOnce({ id: 1 });
-      mockDb.query.product.findMany.mockResolvedValueOnce([{ id: 1, price: 50 }]);
-      mockDb.query.inventory.findMany.mockResolvedValueOnce([{
-        id: 1,
-        quantity: 10,
-        inventoryProducts: [{ productId: 1 }] // Needed for inventory check
-      }]);
+      mockDb.query.product.findMany.mockResolvedValueOnce([
+        { id: 1, price: 50 },
+      ]);
+      mockDb.query.inventory.findMany.mockResolvedValueOnce([
+        {
+          id: 1,
+          quantity: 10,
+          inventoryProducts: [{ productId: 1 }], // Needed for inventory check
+        },
+      ]);
 
-      mockDb.transaction.mockImplementationOnce(async (fn) => fn({
-        insert: () => ({
-          values: () => ({
-            returning: () => [{ id: 1, customerId: 1, total: 100 }],
+      mockDb.transaction.mockImplementationOnce(async (fn) =>
+        fn({
+          insert: () => ({
+            values: () => ({
+              returning: () => [{ id: 1, customerId: 1, total: 100 }],
+            }),
+          }),
+          insertMany: () => ({}),
+          update: () => ({
+            set: () => ({
+              where: () => ({}),
+            }),
           }),
         }),
-        insertMany: () => ({}),
-        update: () => ({
-          set: () => ({
-            where: () => ({}),
-          }),
-        }),
-      }));
+      );
 
       // Mock the full order response with relations
       mockDb.query.order.findFirst.mockResolvedValueOnce({
@@ -150,11 +160,13 @@ describe("Order API", () => {
         customerId: 1,
         total: 100,
         customer: { id: 1, name: "Test Customer" },
-        orderProducts: [{
-          productId: 1,
-          quantity: 2,
-          product: { id: 1, name: "Test Product", price: 50 }
-        }]
+        orderProducts: [
+          {
+            productId: 1,
+            quantity: 2,
+            product: { id: 1, name: "Test Product", price: 50 },
+          },
+        ],
       });
 
       const res = await app.request("/api/order", {
@@ -173,7 +185,7 @@ describe("Order API", () => {
     test("should return 400 if customer does not exist", async () => {
       const newOrder = {
         customerId: "1",
-        products: [{ productId: 1, quantity: 2 }]
+        products: [{ productId: 1, quantity: 2 }],
       };
       mockDb.query.customer.findFirst.mockResolvedValueOnce(null);
 
@@ -191,7 +203,7 @@ describe("Order API", () => {
     test("should return 400 if product does not exist", async () => {
       const newOrder = {
         customerId: "1",
-        products: [{ productId: 1, quantity: 2 }]
+        products: [{ productId: 1, quantity: 2 }],
       };
       mockDb.query.customer.findFirst.mockResolvedValueOnce({ id: 1 });
       mockDb.query.product.findMany.mockResolvedValueOnce([]);
@@ -210,15 +222,19 @@ describe("Order API", () => {
     test("should return 400 if insufficient inventory", async () => {
       const newOrder = {
         customerId: "1",
-        products: [{ productId: 1, quantity: 20 }]
+        products: [{ productId: 1, quantity: 20 }],
       };
       mockDb.query.customer.findFirst.mockResolvedValueOnce({ id: 1 });
-      mockDb.query.product.findMany.mockResolvedValueOnce([{ id: 1, price: 50 }]);
-      mockDb.query.inventory.findMany.mockResolvedValueOnce([{
-        id: 1,
-        quantity: 10,
-        inventoryProducts: [{ productId: 1 }]
-      }]);
+      mockDb.query.product.findMany.mockResolvedValueOnce([
+        { id: 1, price: 50 },
+      ]);
+      mockDb.query.inventory.findMany.mockResolvedValueOnce([
+        {
+          id: 1,
+          quantity: 10,
+          inventoryProducts: [{ productId: 1 }],
+        },
+      ]);
 
       const res = await app.request("/api/order", {
         method: "POST",
@@ -277,7 +293,9 @@ describe("Order API", () => {
   describe("GET /api/order/customer/:customerId", () => {
     test("should return orders for a customer", async () => {
       mockDb.query.customer.findFirst.mockResolvedValueOnce({ id: 1 });
-      mockDb.query.order.findMany.mockResolvedValueOnce([{ id: 1, customerId: 1 }]);
+      mockDb.query.order.findMany.mockResolvedValueOnce([
+        { id: 1, customerId: 1 },
+      ]);
 
       const res = await app.request("/api/order/customer/1", { method: "GET" });
       expect(res.status).toBe(200);
@@ -288,7 +306,9 @@ describe("Order API", () => {
     test("should return 404 if customer not found", async () => {
       mockDb.query.customer.findFirst.mockResolvedValueOnce(null);
 
-      const res = await app.request("/api/order/customer/999", { method: "GET" });
+      const res = await app.request("/api/order/customer/999", {
+        method: "GET",
+      });
       expect(res.status).toBe(404);
       const text = await res.text();
       expect(text).toContain("Customer not found");

@@ -10,7 +10,7 @@ const mockProducts = [
     description: "Description One",
     price: 99.99,
     manufacturerId: 1,
-    manufacturer: { id: 1, name: "Manufacturer One" }
+    manufacturer: { id: 1, name: "Manufacturer One" },
   },
   {
     id: 2,
@@ -18,7 +18,7 @@ const mockProducts = [
     description: "Description Two",
     price: 199.99,
     manufacturerId: 2,
-    manufacturer: { id: 2, name: "Manufacturer Two" }
+    manufacturer: { id: 2, name: "Manufacturer Two" },
   },
 ];
 
@@ -32,7 +32,7 @@ mock.module("@/db", () => ({
       },
       manufacturer: {
         findFirst: mock(() => null),
-      }
+      },
     },
     insert: mock(() => ({
       values: mock(() => ({
@@ -140,9 +140,9 @@ describe("Product API", () => {
             description: "papilla rica",
             price: 1.18,
             storageCondition: "refrigerado",
-            manufacturerId: "1"
-          }
-        ]
+            manufacturerId: "1",
+          },
+        ],
       };
 
       const createdProduct = {
@@ -152,14 +152,17 @@ describe("Product API", () => {
         price: 149.99,
         manufacturerId: 1,
         createdAt: new Date(),
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       // Mock schema validation to return the input data unchanged
       mockSchemas.createProductSchema.mockReturnValueOnce(newProducts);
 
       // Mock manufacturer existence check to return true
-      mockDb.query.manufacturer.findFirst.mockResolvedValueOnce({ id: 1, name: "Existing Manufacturer" });
+      mockDb.query.manufacturer.findFirst.mockResolvedValueOnce({
+        id: 1,
+        name: "Existing Manufacturer",
+      });
 
       // Mock product insertion to return the created product
       mockDb.insert.mockReturnValueOnce({
@@ -175,7 +178,7 @@ describe("Product API", () => {
       });
 
       expect(res.status).toBe(200);
-      const json = await res.json() as any[];
+      const json = (await res.json()) as any[];
       expect(json[0].id).toBe(3);
       expect(json[0].name).toBe("New Product");
       expect(json[0].manufacturerId).toBe(1);
@@ -189,9 +192,9 @@ describe("Product API", () => {
             description: "papilla rica",
             price: 1.18,
             storageCondition: "refrigerado",
-            manufacturerId: "999"
-          }
-        ]
+            manufacturerId: "999",
+          },
+        ],
       };
 
       mockSchemas.createProductSchema.mockReturnValueOnce(newProducts);
@@ -215,10 +218,10 @@ describe("Product API", () => {
           {
             name: "New Product",
             description: "New Description",
-            price: 149.99
+            price: 149.99,
             // Missing manufacturerId
-          }
-        ]
+          },
+        ],
       };
 
       // Mock schema validation to return the input data unchanged
@@ -241,7 +244,7 @@ describe("Product API", () => {
       const updateData = {
         name: "Updated Product Name",
         price: 299.99,
-        manufacturerId: 2
+        manufacturerId: 2,
       };
 
       const updatedProduct = {
@@ -250,14 +253,17 @@ describe("Product API", () => {
         description: "Description One",
         price: 299.99,
         manufacturerId: 2,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       // Mock schema validation
       mockSchemas.updateProductSchema.mockReturnValueOnce(updateData);
 
       // Mock manufacturer existence check
-      mockDb.query.manufacturer.findFirst.mockResolvedValueOnce({ id: 2, name: "Manufacturer Two" });
+      mockDb.query.manufacturer.findFirst.mockResolvedValueOnce({
+        id: 2,
+        name: "Manufacturer Two",
+      });
 
       // Mock update operation
       mockDb.update.mockReturnValueOnce({
@@ -275,7 +281,12 @@ describe("Product API", () => {
       });
 
       expect(res.status).toBe(200);
-      const json = await res.json() as  { name: string; price: number; manufacturerId: number;  updatedAt: Date};
+      const json = (await res.json()) as {
+        name: string;
+        price: number;
+        manufacturerId: number;
+        updatedAt: Date;
+      };
       expect(json.name).toBe("Updated Product Name");
       expect(json.price).toBe(299.99);
       expect(json.manufacturerId).toBe(2);
@@ -285,14 +296,17 @@ describe("Product API", () => {
     test("should return 404 if product doesn't exist", async () => {
       const updateData = {
         name: "Updated Name",
-        manufacturerId: 1
+        manufacturerId: 1,
       };
 
       // Mock schema validation
       mockSchemas.updateProductSchema.mockReturnValueOnce(updateData);
 
       // Mock manufacturer existence check
-      mockDb.query.manufacturer.findFirst.mockResolvedValueOnce({ id: 1, name: "Existing Manufacturer" });
+      mockDb.query.manufacturer.findFirst.mockResolvedValueOnce({
+        id: 1,
+        name: "Existing Manufacturer",
+      });
 
       // Mock update returning empty array to simulate product not found
       mockDb.update.mockReturnValueOnce({

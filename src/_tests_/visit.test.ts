@@ -52,7 +52,9 @@ describe("Visit API", () => {
     mockDb.select.mockReset();
     Object.values(mockDb.query.visit).forEach((fn: any) => fn.mockReset());
     Object.values(mockDb.query.customer).forEach((fn: any) => fn.mockReset());
-    Object.values(mockDb.query.salesperson).forEach((fn: any) => fn.mockReset());
+    Object.values(mockDb.query.salesperson).forEach((fn: any) =>
+      fn.mockReset(),
+    );
     mockDb.insert.mockReset();
     mockDb.update.mockReset();
     mockDb.delete.mockReset();
@@ -61,7 +63,13 @@ describe("Visit API", () => {
   describe("GET /api/visit", () => {
     test("should return all visits", async () => {
       const visits = [
-        { id: 1, visitDate: "2024-06-01", comments: "Test", customerId: "1", salespersonId: "2" },
+        {
+          id: 1,
+          visitDate: "2024-06-01",
+          comments: "Test",
+          customerId: "1",
+          salespersonId: "2",
+        },
       ];
       mockDb.select.mockReturnValueOnce({
         from: mock(() => visits),
@@ -76,7 +84,13 @@ describe("Visit API", () => {
 
   describe("GET /api/visit/:id", () => {
     test("should return a visit if exists", async () => {
-      const visitObj = { id: 1, visitDate: "2024-06-01", comments: "Test", customerId: "1", salespersonId: "2" };
+      const visitObj = {
+        id: 1,
+        visitDate: "2024-06-01",
+        comments: "Test",
+        customerId: "1",
+        salespersonId: "2",
+      };
       mockDb.query.visit.findFirst.mockResolvedValueOnce(visitObj);
 
       const res = await app.request("/api/visit/1", { method: "GET" });
@@ -108,13 +122,15 @@ describe("Visit API", () => {
       mockDb.query.salesperson.findFirst.mockResolvedValueOnce({ id: "2" });
       mockDb.insert.mockImplementationOnce(() => ({
         values: () => ({
-          returning: () => [{
-            id: 1,
-            ...validVisit,
-            visitDate: new Date(validVisit.visitDate).toISOString(),
-            createdAt: expect.any(String),
-            updatedAt: expect.any(String),
-          }],
+          returning: () => [
+            {
+              id: 1,
+              ...validVisit,
+              visitDate: new Date(validVisit.visitDate).toISOString(),
+              createdAt: expect.any(String),
+              updatedAt: expect.any(String),
+            },
+          ],
         }),
       }));
 

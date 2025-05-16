@@ -310,7 +310,6 @@ inventoryRouter.get("/product/:productId/warehouses", async (c) => {
   return c.json(warehouses);
 });
 
-
 inventoryRouter.get("/product/:productId/total-quantity", async (c) => {
   const productId = Number(c.req.param("productId"));
 

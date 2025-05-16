@@ -47,7 +47,9 @@ describe("Statement API", () => {
 
     // Reset all mocks
     Object.values(mockDb.query.statement).forEach((fn: any) => fn.mockReset());
-    Object.values(mockDb.query.salesperson).forEach((fn: any) => fn.mockReset());
+    Object.values(mockDb.query.salesperson).forEach((fn: any) =>
+      fn.mockReset(),
+    );
     Object.values(mockDb.query.customer).forEach((fn: any) => fn.mockReset());
     mockDb.insert.mockReset();
     mockDb.update.mockReset();
@@ -57,11 +59,19 @@ describe("Statement API", () => {
   describe("GET /api/statement", () => {
     test("should return statements for a salesperson", async () => {
       const statements = [
-        { id: 1, description: "desc", date: "2024-06-01", salespersonId: "sp-1", customerId: "c-1" },
+        {
+          id: 1,
+          description: "desc",
+          date: "2024-06-01",
+          salespersonId: "sp-1",
+          customerId: "c-1",
+        },
       ];
       mockDb.query.statement.findMany.mockResolvedValueOnce(statements);
 
-      const res = await app.request("/api/statement?salespersonId=sp-1", { method: "GET" });
+      const res = await app.request("/api/statement?salespersonId=sp-1", {
+        method: "GET",
+      });
       expect(res.status).toBe(200);
       const json = await res.json();
       expect(json).toEqual(statements);
@@ -81,15 +91,17 @@ describe("Statement API", () => {
       mockDb.query.customer.findFirst.mockResolvedValueOnce({ id: "c-1" });
       mockDb.insert.mockImplementationOnce(() => ({
         values: () => ({
-          returning: () => [{
-            id: 1,
-            description: "Test statement",
-            Date: new Date("2024-06-01"),
-            salespersonId: "sp-1",
-            customerId: "c-1",
-            createdAt: expect.any(String),
-            updatedAt: expect.any(String),
-          }],
+          returning: () => [
+            {
+              id: 1,
+              description: "Test statement",
+              Date: new Date("2024-06-01"),
+              salespersonId: "sp-1",
+              customerId: "c-1",
+              createdAt: expect.any(String),
+              updatedAt: expect.any(String),
+            },
+          ],
         }),
       }));
 

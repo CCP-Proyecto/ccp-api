@@ -39,34 +39,31 @@ mock.module("@/db", () => ({
         returning: mock(() => []),
       })),
     })),
-    transaction: mock(async (fn) => fn({
-      insert: mock(() => ({
-        values: mock(() => ({
-          returning: mock(() => [{ id: 1, quantity: 10, warehouseId: 1 }]),
+    transaction: mock(async (fn) =>
+      fn({
+        delete: mock(() => ({
+          where: mock(() => ({})),
         })),
-      })),
-      delete: mock(() => ({
-        where: mock(() => ({})),
-      })),
-      query: {
-        inventory: {
-          findFirst: mock(() => ({
-            id: 1,
-            quantity: 10,
-            warehouseId: 1,
-            warehouse: { id: 1, name: "Warehouse 1" },
-            products: [
-              {
-                product: { id: 1, name: "Product 1" },
-              },
-            ],
-          })),
+        query: {
+          inventory: {
+            findFirst: mock(() => ({
+              id: 1,
+              quantity: 10,
+              warehouseId: 1,
+              warehouse: { id: 1, name: "Warehouse 1" },
+              products: [
+                {
+                  product: { id: 1, name: "Product 1" },
+                },
+              ],
+            })),
+          },
         },
-      },
-      insert: mock(() => ({
-        values: mock(() => ({})),
-      })),
-    })),
+        insert: mock(() => ({
+          values: mock(() => ({})),
+        })),
+      }),
+    ),
   },
 }));
 
@@ -83,7 +80,9 @@ describe("Inventory API", () => {
     Object.values(mockDb.query.inventory).forEach((fn) => fn.mockReset());
     Object.values(mockDb.query.warehouse).forEach((fn) => fn.mockReset());
     Object.values(mockDb.query.product).forEach((fn) => fn.mockReset());
-    Object.values(mockDb.query.inventoryProduct).forEach((fn) => fn.mockReset());
+    Object.values(mockDb.query.inventoryProduct).forEach((fn) =>
+      fn.mockReset(),
+    );
     mockDb.insert.mockReset();
     mockDb.update.mockReset();
     mockDb.delete.mockReset();
@@ -149,12 +148,12 @@ describe("Inventory API", () => {
   describe("POST /api/inventory", () => {
     test("should create new inventories with valid data", async () => {
       const body = {
-        inventories: [
-          { quantity: 10, productId: 1, warehouseId: 1 },
-        ],
+        inventories: [{ quantity: 10, productId: 1, warehouseId: 1 }],
       };
       mockDb.query.warehouse.findMany.mockResolvedValueOnce([{ id: 1 }]);
-      mockDb.query.product.findMany.mockResolvedValueOnce([{ id: 1, name: "Product 1" }]);
+      mockDb.query.product.findMany.mockResolvedValueOnce([
+        { id: 1, name: "Product 1" },
+      ]);
       mockDb.transaction.mockImplementationOnce(async (fn) =>
         fn({
           insert: (...args: any[]) => ({
@@ -171,13 +170,11 @@ describe("Inventory API", () => {
                 id: 1,
                 quantity: 10,
                 warehouse: { id: 1, name: "Warehouse 1" },
-                products: [
-                  { product: { id: 1, name: "Product 1" } }
-                ],
+                products: [{ product: { id: 1, name: "Product 1" } }],
               }),
             },
           },
-        })
+        }),
       );
 
       const res = await app.request("/api/inventory", {
@@ -236,7 +233,10 @@ describe("Inventory API", () => {
   describe("PUT /api/inventory/:id", () => {
     test("should update inventory with valid data", async () => {
       mockDb.query.inventory.findFirst.mockResolvedValueOnce({ id: 1 });
-      mockDb.query.product.findFirst.mockResolvedValueOnce({ id: 1, name: "Product 1" });
+      mockDb.query.product.findFirst.mockResolvedValueOnce({
+        id: 1,
+        name: "Product 1",
+      });
       mockDb.update.mockReturnValueOnce({
         set: mock(() => ({
           where: mock(() => ({
@@ -260,7 +260,7 @@ describe("Inventory API", () => {
       expect(res.status).toBe(200);
       const json = await res.json();
       expect(json.quantity).toBe(20);
-      expect(json.products[0].product.name).toBe("Product 1");  // Fixed assertion
+      expect(json.products[0].product.name).toBe("Product 1"); // Fixed assertion
     });
 
     test("should return 400 for invalid inventory id", async () => {
@@ -303,11 +303,13 @@ describe("Inventory API", () => {
   describe("DELETE /api/inventory/:id", () => {
     test("should delete inventory successfully", async () => {
       mockDb.query.inventory.findFirst.mockResolvedValueOnce({ id: 1 });
-      mockDb.transaction.mockImplementationOnce(async (fn) => fn({
-        delete: mock(() => ({
-          where: mock(() => ({})),
-        })),
-      }));
+      mockDb.transaction.mockImplementationOnce(async (fn) =>
+        fn({
+          delete: mock(() => ({
+            where: mock(() => ({})),
+          })),
+        }),
+      );
       const res = await app.request("/api/inventory/1", { method: "DELETE" });
       expect(res.status).toBe(200);
       const json = await res.json();
@@ -332,7 +334,10 @@ describe("Inventory API", () => {
 
   describe("GET /api/inventory/product/:productId/warehouses", () => {
     test("should return warehouses for a product", async () => {
-      mockDb.query.product.findFirst.mockResolvedValueOnce({ id: 1, name: "Product 1" });
+      mockDb.query.product.findFirst.mockResolvedValueOnce({
+        id: 1,
+        name: "Product 1",
+      });
       mockDb.query.inventoryProduct.findMany.mockResolvedValueOnce([
         {
           inventory: {
@@ -347,7 +352,9 @@ describe("Inventory API", () => {
           },
         },
       ]);
-      const res = await app.request("/api/inventory/product/1/warehouses", { method: "GET" });
+      const res = await app.request("/api/inventory/product/1/warehouses", {
+        method: "GET",
+      });
       expect(res.status).toBe(200);
       const json = await res.json();
       expect(json.length).toBe(2);
@@ -355,7 +362,9 @@ describe("Inventory API", () => {
     });
 
     test("should return 400 for invalid product id", async () => {
-      const res = await app.request("/api/inventory/product/abc/warehouses", { method: "GET" });
+      const res = await app.request("/api/inventory/product/abc/warehouses", {
+        method: "GET",
+      });
       expect(res.status).toBe(400);
       const text = await res.text();
       expect(text).toContain("Invalid product ID");
@@ -363,16 +372,23 @@ describe("Inventory API", () => {
 
     test("should return 404 if product not found", async () => {
       mockDb.query.product.findFirst.mockResolvedValueOnce(null);
-      const res = await app.request("/api/inventory/product/999/warehouses", { method: "GET" });
+      const res = await app.request("/api/inventory/product/999/warehouses", {
+        method: "GET",
+      });
       expect(res.status).toBe(404);
       const text = await res.text();
       expect(text).toContain("Product not found");
     });
 
     test("should return empty array if no warehouses", async () => {
-      mockDb.query.product.findFirst.mockResolvedValueOnce({ id: 1, name: "Product 1" });
+      mockDb.query.product.findFirst.mockResolvedValueOnce({
+        id: 1,
+        name: "Product 1",
+      });
       mockDb.query.inventoryProduct.findMany.mockResolvedValueOnce([]);
-      const res = await app.request("/api/inventory/product/1/warehouses", { method: "GET" });
+      const res = await app.request("/api/inventory/product/1/warehouses", {
+        method: "GET",
+      });
       expect(res.status).toBe(200);
       const json = await res.json();
       expect(json).toEqual([]);
@@ -381,12 +397,17 @@ describe("Inventory API", () => {
 
   describe("GET /api/inventory/product/:productId/total-quantity", () => {
     test("should return total quantity for a product", async () => {
-      mockDb.query.product.findFirst.mockResolvedValueOnce({ id: 1, name: "Product 1" });
+      mockDb.query.product.findFirst.mockResolvedValueOnce({
+        id: 1,
+        name: "Product 1",
+      });
       mockDb.query.inventoryProduct.findMany.mockResolvedValueOnce([
         { inventory: { quantity: 5 } },
         { inventory: { quantity: 10 } },
       ]);
-      const res = await app.request("/api/inventory/product/1/total-quantity", { method: "GET" });
+      const res = await app.request("/api/inventory/product/1/total-quantity", {
+        method: "GET",
+      });
       expect(res.status).toBe(200);
       const json = await res.json();
       expect(json.totalQuantity).toBe(15);
@@ -394,7 +415,10 @@ describe("Inventory API", () => {
     });
 
     test("should return 400 for invalid product id", async () => {
-      const res = await app.request("/api/inventory/product/abc/total-quantity", { method: "GET" });
+      const res = await app.request(
+        "/api/inventory/product/abc/total-quantity",
+        { method: "GET" },
+      );
       expect(res.status).toBe(400);
       const text = await res.text();
       expect(text).toContain("Invalid product ID");
@@ -402,7 +426,10 @@ describe("Inventory API", () => {
 
     test("should return 404 if product not found", async () => {
       mockDb.query.product.findFirst.mockResolvedValueOnce(null);
-      const res = await app.request("/api/inventory/product/999/total-quantity", { method: "GET" });
+      const res = await app.request(
+        "/api/inventory/product/999/total-quantity",
+        { method: "GET" },
+      );
       expect(res.status).toBe(404);
       const text = await res.text();
       expect(text).toContain("Product not found");
@@ -411,15 +438,23 @@ describe("Inventory API", () => {
 
   describe("GET /api/inventory/product/:productId/warehouse/:warehouseId", () => {
     test("should return inventory for product in warehouse", async () => {
-      mockDb.query.product.findFirst.mockResolvedValueOnce({ id: 1, name: "Product 1" });
-      mockDb.query.warehouse.findFirst.mockResolvedValueOnce({ id: 1, name: "Warehouse 1" });
+      mockDb.query.product.findFirst.mockResolvedValueOnce({
+        id: 1,
+        name: "Product 1",
+      });
+      mockDb.query.warehouse.findFirst.mockResolvedValueOnce({
+        id: 1,
+        name: "Warehouse 1",
+      });
       mockDb.query.inventory.findFirst.mockResolvedValueOnce({
         id: 1,
         quantity: 10,
         warehouse: { id: 1, name: "Warehouse 1" },
         products: [{ product: { id: 1, name: "Product 1" } }],
       });
-      const res = await app.request("/api/inventory/product/1/warehouse/1", { method: "GET" });
+      const res = await app.request("/api/inventory/product/1/warehouse/1", {
+        method: "GET",
+      });
       expect(res.status).toBe(200);
       const json = await res.json();
       expect(json.inventoryId).toBe(1);
@@ -428,14 +463,18 @@ describe("Inventory API", () => {
     });
 
     test("should return 400 for invalid product id", async () => {
-      const res = await app.request("/api/inventory/product/abc/warehouse/1", { method: "GET" });
+      const res = await app.request("/api/inventory/product/abc/warehouse/1", {
+        method: "GET",
+      });
       expect(res.status).toBe(400);
       const text = await res.text();
       expect(text).toContain("Invalid product ID");
     });
 
     test("should return 400 for invalid warehouse id", async () => {
-      const res = await app.request("/api/inventory/product/1/warehouse/abc", { method: "GET" });
+      const res = await app.request("/api/inventory/product/1/warehouse/abc", {
+        method: "GET",
+      });
       expect(res.status).toBe(400);
       const text = await res.text();
       expect(text).toContain("Invalid warehouse ID");
@@ -443,31 +482,46 @@ describe("Inventory API", () => {
 
     test("should return 404 if product not found", async () => {
       mockDb.query.product.findFirst.mockResolvedValueOnce(null);
-      const res = await app.request("/api/inventory/product/999/warehouse/1", { method: "GET" });
+      const res = await app.request("/api/inventory/product/999/warehouse/1", {
+        method: "GET",
+      });
       expect(res.status).toBe(404);
       const text = await res.text();
       expect(text).toContain("Product not found");
     });
 
     test("should return 404 if warehouse not found", async () => {
-      mockDb.query.product.findFirst.mockResolvedValueOnce({ id: 1, name: "Product 1" });
+      mockDb.query.product.findFirst.mockResolvedValueOnce({
+        id: 1,
+        name: "Product 1",
+      });
       mockDb.query.warehouse.findFirst.mockResolvedValueOnce(null);
-      const res = await app.request("/api/inventory/product/1/warehouse/999", { method: "GET" });
+      const res = await app.request("/api/inventory/product/1/warehouse/999", {
+        method: "GET",
+      });
       expect(res.status).toBe(404);
       const text = await res.text();
       expect(text).toContain("Warehouse not found");
     });
 
     test("should return 404 if product not found in warehouse", async () => {
-      mockDb.query.product.findFirst.mockResolvedValueOnce({ id: 1, name: "Product 1" });
-      mockDb.query.warehouse.findFirst.mockResolvedValueOnce({ id: 1, name: "Warehouse 1" });
+      mockDb.query.product.findFirst.mockResolvedValueOnce({
+        id: 1,
+        name: "Product 1",
+      });
+      mockDb.query.warehouse.findFirst.mockResolvedValueOnce({
+        id: 1,
+        name: "Warehouse 1",
+      });
       mockDb.query.inventory.findFirst.mockResolvedValueOnce({
         id: 1,
         quantity: 10,
         warehouse: { id: 1, name: "Warehouse 1" },
         products: [],
       });
-      const res = await app.request("/api/inventory/product/1/warehouse/1", { method: "GET" });
+      const res = await app.request("/api/inventory/product/1/warehouse/1", {
+        method: "GET",
+      });
       expect(res.status).toBe(404);
       const text = await res.text();
       expect(text).toContain("Product not found in specified warehouse");

@@ -128,7 +128,7 @@ describe("Salesperson API", () => {
         id: "354342",
         idType: "CC",
         name: "New Person",
-        phone:"4324234123",
+        phone: "4324234123",
         email: "new@example.com",
       };
 
@@ -162,8 +162,12 @@ describe("Salesperson API", () => {
         email: "john@example.com",
       };
 
-      mockSchemas.createSalespersonSchema.mockReturnValueOnce(existingSalesperson);
-      mockDb.query.salesperson.findFirst.mockResolvedValueOnce(existingSalesperson);
+      mockSchemas.createSalespersonSchema.mockReturnValueOnce(
+        existingSalesperson,
+      );
+      mockDb.query.salesperson.findFirst.mockResolvedValueOnce(
+        existingSalesperson,
+      );
 
       const res = await app.request("/api/salesperson", {
         method: "POST",
@@ -207,7 +211,12 @@ describe("Salesperson API", () => {
       });
 
       expect(res.status).toBe(200);
-      const json = await res.json() as  { name: string; email: string; id: string;  updatedAt: Date};
+      const json = (await res.json()) as {
+        name: string;
+        email: string;
+        id: string;
+        updatedAt: Date;
+      };
       expect(json.name).toBe("Updated Name");
       expect(json.email).toBe("updated@example.com");
       expect(json.id).toBe("1");

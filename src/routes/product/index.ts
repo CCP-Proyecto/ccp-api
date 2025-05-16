@@ -129,7 +129,7 @@ productRouter.get("/manufacturer/:manufacturerId", async (c) => {
   const manufacturerId = c.req.param("manufacturerId");
 
   const products = await db.query.product.findMany({
-    where: eq(product.manufacturerId, manufacturerId)
+    where: eq(product.manufacturerId, manufacturerId),
   });
 
   return c.json(products);

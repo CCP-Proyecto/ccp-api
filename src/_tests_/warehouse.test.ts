@@ -238,7 +238,7 @@ describe("Warehouse API", () => {
       });
 
       expect(res.status).toBe(200);
-      const json = await res.json() as  { name: string; location: string};
+      const json = (await res.json()) as { name: string; location: string };
       expect(json.name).toBe("Partially Updated Name");
       expect(json.location).toBe("Original Location");
     });

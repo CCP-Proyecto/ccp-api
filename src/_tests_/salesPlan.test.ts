@@ -44,7 +44,9 @@ describe("SalesPlan API", () => {
 
     // Reset all mocks
     Object.values(mockDb.query.salesPlan).forEach((fn: any) => fn.mockReset());
-    Object.values(mockDb.query.salesperson).forEach((fn: any) => fn.mockReset());
+    Object.values(mockDb.query.salesperson).forEach((fn: any) =>
+      fn.mockReset(),
+    );
     mockDb.insert.mockReset();
     mockDb.update.mockReset();
     mockDb.delete.mockReset();
@@ -65,7 +67,9 @@ describe("SalesPlan API", () => {
       const plans = [{ id: 2, name: "Plan 2", salespersonId: "sp-1" }];
       mockDb.query.salesPlan.findMany.mockResolvedValueOnce(plans);
 
-      const res = await app.request("/api/salesPlan?salespersonId=sp-1", { method: "GET" });
+      const res = await app.request("/api/salesPlan?salespersonId=sp-1", {
+        method: "GET",
+      });
       expect(res.status).toBe(200);
       const json = await res.json();
       expect(json).toEqual(plans);
@@ -78,24 +82,26 @@ describe("SalesPlan API", () => {
         name: "Q2 Plan",
         description: "Quarter 2 sales plan",
         period: "quarterly",
-        salespersonId: "sp-1"
+        salespersonId: "sp-1",
       };
 
       mockDb.query.salesperson.findFirst.mockResolvedValueOnce({
         id: "sp-1",
-        name: "John Doe"
+        name: "John Doe",
       });
 
       mockDb.insert.mockImplementationOnce(() => ({
         values: () => ({
-          returning: () => [{
-            id: 1,
-            name: "Q2 Plan",
-            description: "Quarter 2 sales plan",
-            period: "quarterly",
-            salespersonId: "sp-1",
-          }]
-        })
+          returning: () => [
+            {
+              id: 1,
+              name: "Q2 Plan",
+              description: "Quarter 2 sales plan",
+              period: "quarterly",
+              salespersonId: "sp-1",
+            },
+          ],
+        }),
       }));
 
       const res = await app.request("/api/salesPlan", {
@@ -112,7 +118,7 @@ describe("SalesPlan API", () => {
         name: "Q2 Plan",
         description: "Quarter 2 sales plan",
         period: "quarterly",
-        salespersonId: "sp-1"
+        salespersonId: "sp-1",
       });
     });
 
@@ -121,7 +127,7 @@ describe("SalesPlan API", () => {
         name: "Q2 Plan",
         description: "Quarter 2 sales plan",
         period: "quarterly", // <-- valid value
-        salespersonId: "sp-1"
+        salespersonId: "sp-1",
       };
 
       mockDb.query.salesperson.findFirst.mockResolvedValueOnce(null);
@@ -159,7 +165,7 @@ describe("SalesPlan API", () => {
         name: "Q2 Plan",
         description: 12345, // Should be string
         period: "Q2",
-        salespersonId: "sp-1"
+        salespersonId: "sp-1",
       };
 
       const res = await app.request("/api/salesPlan", {

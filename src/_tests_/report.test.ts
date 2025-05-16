@@ -26,7 +26,9 @@ describe("Report API", () => {
     app.route("/api/report", report);
 
     // Reset all mocks
-    Object.values(mockDb.query.salesperson).forEach((fn: any) => fn.mockReset());
+    Object.values(mockDb.query.salesperson).forEach((fn: any) =>
+      fn.mockReset(),
+    );
     Object.values(mockDb.query.order).forEach((fn: any) => fn.mockReset());
   });
 
@@ -40,8 +42,20 @@ describe("Report API", () => {
     test("should return report data for valid query", async () => {
       const salesperson = { id: "sp-1", name: "Sales Person" };
       const orders = [
-        { id: 1, total: 100, createdAt: new Date("2024-01-10"), customer: {}, orderProducts: [] },
-        { id: 2, total: 200, createdAt: new Date("2024-01-20"), customer: {}, orderProducts: [] },
+        {
+          id: 1,
+          total: 100,
+          createdAt: new Date("2024-01-10"),
+          customer: {},
+          orderProducts: [],
+        },
+        {
+          id: 2,
+          total: 200,
+          createdAt: new Date("2024-01-20"),
+          customer: {},
+          orderProducts: [],
+        },
       ];
       mockDb.query.salesperson.findFirst.mockResolvedValueOnce(salesperson);
       mockDb.query.order.findMany.mockResolvedValueOnce(orders);

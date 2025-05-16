@@ -143,7 +143,10 @@ describe("Delivery API", () => {
         address: "123 Main St",
       };
       mockDb.query.order.findFirst.mockResolvedValueOnce({ id: 1 }); // order exists
-      mockDb.query.delivery.findFirst.mockResolvedValueOnce({ id: 2, orderId: 1 }); // delivery exists
+      mockDb.query.delivery.findFirst.mockResolvedValueOnce({
+        id: 2,
+        orderId: 1,
+      }); // delivery exists
 
       const res = await app.request("/api/delivery", {
         method: "POST",
