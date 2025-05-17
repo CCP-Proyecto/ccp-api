@@ -1,5 +1,5 @@
 import { type } from "arktype";
-import { eq } from "drizzle-orm";
+import { and, eq, gte, lte } from "drizzle-orm";
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 
@@ -126,6 +126,52 @@ visitRouter.put("/:id", async (c) => {
   }
 
   return c.json(updatedVisit[0]);
+});
+
+visitRouter.get("/salesperson/:salespersonId", async (c) => {
+  const salespersonIdParam = c.req.param("salespersonId");
+  if (
+    !salespersonIdParam ||
+    Number.isNaN(Number.parseInt(salespersonIdParam))
+  ) {
+    throw new HTTPException(400, { message: "Invalid salesperson ID" });
+  }
+
+  const visits = await db.query.visit.findMany({
+    where: eq(visit.salespersonId, salespersonIdParam),
+  });
+
+  return c.json(visits);
+});
+
+visitRouter.get("/salesperson/:salespersonId/date/:date", async (c) => {
+  const salespersonIdParam = c.req.param("salespersonId");
+  const salespersonId = Number.parseInt(salespersonIdParam);
+  const dateString = c.req.param("date");
+
+  if (Number.isNaN(salespersonId)) {
+    throw new HTTPException(400, { message: "Invalid salesperson ID" });
+  }
+
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) {
+    throw new HTTPException(400, { message: "Invalid date format" });
+  }
+
+  const startOfDay = new Date(date);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(date);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const visits = await db.query.visit.findMany({
+    where: and(
+      eq(visit.salespersonId, salespersonIdParam),
+      gte(visit.visitDate, startOfDay),
+      lte(visit.visitDate, endOfDay),
+    ),
+  });
+
+  return c.json(visits);
 });
 
 visitRouter.delete("/:id", async (c) => {
