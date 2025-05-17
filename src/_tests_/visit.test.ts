@@ -214,7 +214,7 @@ describe("Visit API", () => {
       });
 
       expect(res.status).toBe(200);
-      const json = await res.json();
+      const json = await res.json() as {comments: string};
       expect(json.comments).toBe("Updated");
     });
 
@@ -268,6 +268,56 @@ describe("Visit API", () => {
     });
   });
 
+  describe("GET /api/visit/salesperson/:salespersonId", () => {
+    test("should return visits for a salesperson", async () => {
+      const visits = [
+        { id: 1, salespersonId: 2, customerId: 1, visitDate: "2024-06-01" },
+      ];
+      mockDb.query.visit.findMany = mock(() => visits);
+
+      const res = await app.request("/api/visit/salesperson/2", { method: "GET" });
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json).toEqual(visits);
+    });
+
+    test("should return 400 for invalid salesperson ID", async () => {
+      const res = await app.request("/api/visit/salesperson/abc", { method: "GET" });
+      expect(res.status).toBe(400);
+      const text = await res.text();
+      expect(text).toContain("Invalid salesperson ID");
+    });
+  });
+
+  describe("GET /api/visit/salesperson/:salespersonId/date/:date", () => {
+    test("should return visits for a salesperson on a specific date", async () => {
+      const visits = [
+        { id: 1, salespersonId: 2, customerId: 1, visitDate: "2024-06-01T10:00:00.000Z" },
+      ];
+      mockDb.query.visit.findMany = mock(() => visits);
+
+      const res = await app.request("/api/visit/salesperson/2/date/2024-06-01", { method: "GET" });
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json).toEqual(visits);
+    });
+
+    test("should return 400 for invalid salesperson ID", async () => {
+      const res = await app.request("/api/visit/salesperson/abc/date/2024-06-01", { method: "GET" });
+      expect(res.status).toBe(400);
+      const text = await res.text();
+      expect(text).toContain("Invalid salesperson ID");
+    });
+
+    test("should return 400 for invalid date format", async () => {
+      const res = await app.request("/api/visit/salesperson/2/date/not-a-date", { method: "GET" });
+      expect(res.status).toBe(400);
+      const text = await res.text();
+      expect(text).toContain("Invalid date format");
+    });
+  });
+
+
   describe("DELETE /api/visit/:id", () => {
     test("should delete a visit", async () => {
       mockDb.delete.mockReturnValueOnce({
@@ -278,7 +328,7 @@ describe("Visit API", () => {
 
       const res = await app.request("/api/visit/1", { method: "DELETE" });
       expect(res.status).toBe(200);
-      const json = await res.json();
+      const json = await res.json() as {message: string};
       expect(json.message).toContain("deleted");
     });
 
