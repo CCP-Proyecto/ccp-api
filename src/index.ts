@@ -1,6 +1,7 @@
 import { env } from "bun";
 import { Hono } from "hono";
 import { logger } from "hono/logger";
+import "dotenv/config";
 
 import { verifySession } from "@/middlewares";
 import {
@@ -23,7 +24,20 @@ const app = new Hono();
 
 app.use(logger());
 
-app.use("/api/*", verifySession);
+// ** Middleware para CORS global **
+app.use("/api/*", (c, next) => {
+  c.header("Access-Control-Allow-Origin", "http://localhost:3000"); // Cambia al origen que usas en React
+  c.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  c.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  if (c.req.method === "OPTIONS") {
+    return c.text("", 204); // Responde a preflight
+  }
+
+  return next();
+});
+
+/*app.use("/api/*", verifySession);*/
 
 app.route("/api/manufacturer", manufacturer);
 app.route("/api/product", product);
@@ -54,7 +68,7 @@ app.onError((error, c) => {
       message,
       status: error.status,
     },
-    error.status,
+    error.status
   );
 });
 
